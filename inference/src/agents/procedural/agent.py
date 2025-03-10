@@ -1,18 +1,18 @@
-from typing import List, Optional, TypedDict, Literal
 from datetime import datetime
+from typing import List, Literal, Optional, TypedDict
 
 from langchain_core.language_models import BaseChatModel
-from langgraph.graph import END, StateGraph
 from langchain_core.messages import BaseMessage
+from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 
-from .commands import PYTHON_CONTEXT_COMMANDS, JVM_CONTEXT_COMMANDS
-from .prompts import get_python_setup_prompt, get_jvm_setup_prompt
 from ...async_bash_executor import CommandExecutionResult
 from ...context_providers.build_instructions import EnvSetupInstructionProvider
 from ...toolkits.base import BaseEnvSetupToolkit
 from ...utils import message_to_info
 from ..base import BaseEnvSetupAgent
+from .commands import JVM_CONTEXT_COMMANDS, PYTHON_CONTEXT_COMMANDS
+from .prompts import get_jvm_setup_prompt, get_python_setup_prompt
 
 
 class EnvSetupProceduralState(TypedDict):
@@ -34,9 +34,9 @@ class EnvSetupProceduralTrajectoryEntry(TypedDict):
     messages: List[dict]
 
 
-class EnvSetupProceduralAgent(BaseEnvSetupAgent[EnvSetupProceduralState,
-                                               EnvSetupProceduralUpdate,
-                                               EnvSetupProceduralTrajectoryEntry]):
+class EnvSetupProceduralAgent(
+    BaseEnvSetupAgent[EnvSetupProceduralState, EnvSetupProceduralUpdate, EnvSetupProceduralTrajectoryEntry]
+):
     def __init__(
         self,
         model: BaseChatModel,
@@ -55,12 +55,12 @@ class EnvSetupProceduralAgent(BaseEnvSetupAgent[EnvSetupProceduralState,
     async def collect_context(self, state: EnvSetupProceduralState) -> dict:
         """Node that collects context by running predefined commands."""
         commands = PYTHON_CONTEXT_COMMANDS if self.language == "python" else JVM_CONTEXT_COMMANDS
-        
+
         results = []
         for cmd in commands:
             result, exit_code = await self.toolkit.bash_executor.execute_bash_command(cmd)
             results.append(f"Command: {cmd}\nOutput: {result}\nExit Code: {exit_code}")
-        
+
         context = "\n".join(results)
         res = state.copy()
         res["context"] = context
@@ -73,7 +73,7 @@ class EnvSetupProceduralAgent(BaseEnvSetupAgent[EnvSetupProceduralState,
         print(prompt)
         response = await self.model.ainvoke(prompt)
         script = response.content
-        
+
         # Extract the script from the bash code block
         if "```bash" in script and "```" in script:
             bash_script = script.split("```bash", 1)[1].split("```", 1)[0].strip()
@@ -97,11 +97,11 @@ class EnvSetupProceduralAgent(BaseEnvSetupAgent[EnvSetupProceduralState,
 
     def get_agent(self) -> CompiledGraph:
         workflow = StateGraph(EnvSetupProceduralState)
-        
+
         # Add nodes
         workflow.add_node("context_collector", self.collect_context)
         workflow.add_node("script_generator", self.generate_script)
-        
+
         # Add edges
         workflow.set_entry_point("context_collector")
         workflow.add_edge("context_collector", "script_generator")
@@ -113,11 +113,7 @@ class EnvSetupProceduralAgent(BaseEnvSetupAgent[EnvSetupProceduralState,
         instructions = self.instruction_provider(repository=repository, revision=revision)
         if instructions is None:
             instructions = ""  # Provide a default empty string if None
-        return {
-            "build_instructions": instructions,
-            "context": "",
-            "script": None
-        }
+        return {"build_instructions": instructions, "context": "", "script": None}
 
     @staticmethod
     def process_update_for_trajectory(

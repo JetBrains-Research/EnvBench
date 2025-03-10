@@ -228,9 +228,7 @@ def calculate_stats(
 
     # Calculate comparison averages
     prev_avg_missing_imports = prev_total_missing_imports / prev_non_error_repos if prev_non_error_repos > 0 else 0
-    prev_avg_missing_packages = (
-        prev_total_missing_packages / prev_non_error_repos if prev_non_error_repos > 0 else 0
-    )
+    prev_avg_missing_packages = prev_total_missing_packages / prev_non_error_repos if prev_non_error_repos > 0 else 0
 
     stats = {
         "total": total,

@@ -1,6 +1,7 @@
 import logging
 import os
 import queue
+import re
 import subprocess
 import threading
 import time
@@ -8,9 +9,9 @@ from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
-import re
 
 import hydra
+import wandb
 import yaml
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
@@ -18,16 +19,15 @@ from rich.align import Align
 from rich.box import DOUBLE, ROUNDED
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.markup import escape
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.rule import Rule
 from rich.table import Table
-from rich.markup import escape
 
 # Configure rich traceback for better error display
 from rich.traceback import install
 
-import wandb
 from analysis.scripts_viewer import generate_scripts_html_from_hf
 from analysis.traj_viewer import generate_trajectories_html_from_hf
 from analysis.view_logs import generate_logs_html_from_hf
@@ -140,16 +140,18 @@ def stream_subprocess_output(
             current_time = time.time()
             if current_time - last_update >= update_interval:
                 if progress.console.is_interactive and FANCY_OUTPUT:
-                    progress.console.print(Panel(
-                        "\n".join(output_lines),
-                        title=f"[bold]{description}[/bold]",
-                        border_style=style,
-                        box=ROUNDED,
-                        title_align="center",
-                        padding=(1, 2),
-                        subtitle="🔄 Live Output",
-                        subtitle_align="right",
-                    ))
+                    progress.console.print(
+                        Panel(
+                            "\n".join(output_lines),
+                            title=f"[bold]{description}[/bold]",
+                            border_style=style,
+                            box=ROUNDED,
+                            title_align="center",
+                            padding=(1, 2),
+                            subtitle="🔄 Live Output",
+                            subtitle_align="right",
+                        )
+                    )
                 else:
                     # Simple output mode
                     for line in output_lines:
@@ -163,16 +165,18 @@ def stream_subprocess_output(
     # Print final state
     if output_lines:
         if progress.console.is_interactive and FANCY_OUTPUT:
-            progress.console.print(Panel(
-                "\n".join(output_lines),
-                title=f"[bold]{description}[/bold]",
-                border_style=style,
-                box=ROUNDED,
-                title_align="center",
-                padding=(1, 2),
-                subtitle="✅ Complete",
-                subtitle_align="right",
-            ))
+            progress.console.print(
+                Panel(
+                    "\n".join(output_lines),
+                    title=f"[bold]{description}[/bold]",
+                    border_style=style,
+                    box=ROUNDED,
+                    title_align="center",
+                    padding=(1, 2),
+                    subtitle="✅ Complete",
+                    subtitle_align="right",
+                )
+            )
         else:
             # Simple output mode
             for line in output_lines:
@@ -197,17 +201,19 @@ def create_config_files(cfg: DictConfig, base_config: dict, file_name: str) -> N
         yaml.safe_dump(evaluation_config, f)
 
 
-def run_command_with_progress(command: str, description: str, progress: Progress, style: str = "blue", data_path: str = None, count_pattern: str = None) -> None:
-    progress.console.print(Panel(
-        f"[bold]Running command:[/bold]\n{command}",
-        style=style,
-        box=ROUNDED,
-        padding=(1, 2)
-    ))
-    
+def run_command_with_progress(
+    command: str,
+    description: str,
+    progress: Progress,
+    style: str = "blue",
+    data_path: str = None,
+    count_pattern: str = None,
+) -> None:
+    progress.console.print(Panel(f"[bold]Running command:[/bold]\n{command}", style=style, box=ROUNDED, padding=(1, 2)))
+
     env = os.environ.copy()
     env["DATA_ROOT"] = data_path
-    
+
     process = subprocess.Popen(
         command,
         shell=True,
@@ -219,11 +225,11 @@ def run_command_with_progress(command: str, description: str, progress: Progress
         bufsize=1,
         universal_newlines=True,
     )
-    
+
     task_id = progress.add_task(f"[{style}]{description}", total=None)
     count = 0
     pattern = re.compile(count_pattern, re.IGNORECASE) if count_pattern else None
-    
+
     def reader(pipe, queue):
         try:
             with pipe:
@@ -231,7 +237,7 @@ def run_command_with_progress(command: str, description: str, progress: Progress
                     queue.put(line.strip())
         finally:
             queue.put(None)
-    
+
     output_queue = queue.Queue()
     stdout_thread = threading.Thread(target=reader, args=(process.stdout, output_queue))
     stderr_thread = threading.Thread(target=reader, args=(process.stderr, output_queue))
@@ -239,24 +245,24 @@ def run_command_with_progress(command: str, description: str, progress: Progress
     stderr_thread.daemon = True
     stdout_thread.start()
     stderr_thread.start()
-    
+
     while stdout_thread.is_alive() or stderr_thread.is_alive() or not output_queue.empty():
         try:
             line = output_queue.get(timeout=0.1)
             if line is None:
                 continue
             progress.console.print(escape(line))
-            
+
             if pattern and pattern.search(line):
                 count += 1
                 progress.update(task_id, description=f"[{style}]{description} (Repositories: {count})")
-                
+
         except queue.Empty:
             continue
-    
+
     process.wait()
     progress.remove_task(task_id)
-    
+
     if process.returncode != 0:
         raise RuntimeError(f"Command failed with return code {process.returncode}")
 
@@ -304,10 +310,10 @@ def main(cfg: DictConfig) -> None:
     console = Console()
     # Track all artifacts for final summary
     artifacts = []
-    
+
     # Print fancy header
     console.print(create_fancy_header("[bold]Environment Setup Pipeline[/bold]"))
-    
+
     # Print configuration panel
     config_text = [
         "[bold white]Configuration Details[/bold white]",
@@ -315,16 +321,19 @@ def main(cfg: DictConfig) -> None:
         f"[bold]🏷️  Run name:[/bold] {cfg.run_name}",
         f"[bold]📂 Working directory:[/bold] {WORKSPACE_DIR}",
         f"[bold]💾 Data path:[/bold] {cfg.data_path}",
-        "[bold]🔄 Active Steps:[/bold] " + " ".join([
-            f"[{STEP_STYLES[step.lower()]}]{step}[/{STEP_STYLES[step.lower()]}]"
-            for step, enabled in {
-                "Inference": not cfg.skip_inference,
-                "Processing": not cfg.skip_processing,
-                "Evaluation": not cfg.skip_evaluation,
-            }.items()
-            if enabled
-        ]),
-        f"[bold]📊 Wandb:[/bold] {'[green]enabled[/green]' if cfg.use_wandb else '[red]disabled[/red]'}"
+        "[bold]🔄 Active Steps:[/bold] "
+        + " ".join(
+            [
+                f"[{STEP_STYLES[step.lower()]}]{step}[/{STEP_STYLES[step.lower()]}]"
+                for step, enabled in {
+                    "Inference": not cfg.skip_inference,
+                    "Processing": not cfg.skip_processing,
+                    "Evaluation": not cfg.skip_evaluation,
+                }.items()
+                if enabled
+            ]
+        ),
+        f"[bold]📊 Wandb:[/bold] {'[green]enabled[/green]' if cfg.use_wandb else '[red]disabled[/red]'}",
     ]
     console.print(Panel("\n".join(config_text), box=ROUNDED, style="cyan", padding=(1, 2)))
     console.print(Rule(style="bright_black"))
@@ -363,7 +372,7 @@ def main(cfg: DictConfig) -> None:
                 "Running inference...",
                 progress,
                 style="blue",
-                data_path=cfg.data_path
+                data_path=cfg.data_path,
             )
 
             console.print(Panel("🔍 Generating trajectories visualization...", style="blue", box=ROUNDED))
@@ -394,7 +403,7 @@ def main(cfg: DictConfig) -> None:
                 "Processing trajectories...",
                 progress,
                 style="green",
-                data_path=cfg.data_path
+                data_path=cfg.data_path,
             )
             console.print(Panel("📝 Generating scripts visualization...", style="green", box=ROUNDED))
             scripts_html = generate_scripts_html_from_hf(
@@ -426,7 +435,7 @@ def main(cfg: DictConfig) -> None:
                 progress,
                 style="yellow",
                 data_path=cfg.data_path,
-                count_pattern=r"Found\s\d+\sissues"  # Add pattern for counting repositories
+                count_pattern=r"Found\s\d+\sissues",  # Add pattern for counting repositories
             )
 
             console.print(Panel("📊 Generating evaluation visualization...", style="yellow", box=ROUNDED))
@@ -452,12 +461,14 @@ def main(cfg: DictConfig) -> None:
         console.print("\n")
 
     # Print completion message
-    console.print(Panel(
-        Align.center("[bold]🎉 Pipeline completed successfully! 🎉[/bold]"),
-        style="bold green",
-        box=DOUBLE,
-        padding=(1, 2)
-    ))
+    console.print(
+        Panel(
+            Align.center("[bold]🎉 Pipeline completed successfully! 🎉[/bold]"),
+            style="bold green",
+            box=DOUBLE,
+            padding=(1, 2),
+        )
+    )
 
 
 if __name__ == "__main__":

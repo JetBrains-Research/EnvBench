@@ -10,10 +10,9 @@ from configs.toolkit_config import EnvSetupToolkit
 from src.agents.base import BaseEnvSetupAgent
 from src.agents.installamatic.agent import InstallamaticAgent
 from src.agents.jvm.agent import EnvSetupJVMAgent
+from src.agents.procedural.agent import EnvSetupProceduralAgent
 from src.agents.python.agent import EnvSetupPythonAgent
 from src.toolkits.base import BaseEnvSetupToolkit
-
-from src.agents.procedural.agent import EnvSetupProceduralAgent
 
 
 class ModelConfig(InstantiatableConfig[BaseChatModel], extra=Extra.allow): ...
@@ -74,7 +73,10 @@ class EnvSetupAgentConfig(BaseModel):
                 toolkit=toolkit, model=model, max_iterations=self.max_iterations, language=self.language
             )
 
-        if self.agent_type == EnvSetupAgentType.procedural_python or self.agent_type == EnvSetupAgentType.procedural_python.value:
+        if (
+            self.agent_type == EnvSetupAgentType.procedural_python
+            or self.agent_type == EnvSetupAgentType.procedural_python.value
+        ):
             return EnvSetupProceduralAgent(
                 toolkit=toolkit,
                 model=model,
@@ -83,7 +85,10 @@ class EnvSetupAgentConfig(BaseModel):
                 language="python",
             )
 
-        if self.agent_type == EnvSetupAgentType.procedural_jvm or self.agent_type == EnvSetupAgentType.procedural_jvm.value:
+        if (
+            self.agent_type == EnvSetupAgentType.procedural_jvm
+            or self.agent_type == EnvSetupAgentType.procedural_jvm.value
+        ):
             return EnvSetupProceduralAgent(
                 toolkit=toolkit,
                 model=model,

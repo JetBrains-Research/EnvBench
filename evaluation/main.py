@@ -43,16 +43,25 @@ def remove_bad_commands(script: str) -> str:
     res = []
     for line in lines:
         stripped_line = line.strip()
-        if stripped_line.startswith("mvn compile") or stripped_line.startswith("./mvnw compile"):
+        if stripped_line.startswith("mvn compile") or stripped_line.startswith(
+            "./mvnw compile"
+        ):
             continue
-        if stripped_line.startswith("mvn test") or stripped_line.startswith("./mvnw test"):
+        if stripped_line.startswith("mvn test") or stripped_line.startswith(
+            "./mvnw test"
+        ):
             continue
-        if stripped_line.startswith("gradle build") or stripped_line.startswith("./gradlew build"):
+        if stripped_line.startswith("gradle build") or stripped_line.startswith(
+            "./gradlew build"
+        ):
             continue
-        if stripped_line.startswith("gradle test") or stripped_line.startswith("./gradlew test"):
+        if stripped_line.startswith("gradle test") or stripped_line.startswith(
+            "./gradlew test"
+        ):
             continue
         res.append(line)
     return "\n".join(res)
+
 
 def run_opensource(
     repo_downloader: RepoDownloader,
@@ -81,7 +90,7 @@ def run_opensource(
         logging.info(f"Using default bootstrap script for {cfg.language}")
 
     bootstrap_script = remove_bad_commands(bootstrap_script)
-    logging.info('removed maven/gradle build commands')
+    logging.info("removed maven/gradle build commands")
 
     # Prepare a repository
     logging.info(f"Downloading repository {repo_name}")

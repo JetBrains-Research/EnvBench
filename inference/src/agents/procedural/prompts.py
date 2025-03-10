@@ -1,6 +1,7 @@
 """Prompts for the procedural environment setup agent."""
 
 from pathlib import Path
+
 from langchain_core.prompts import ChatPromptTemplate
 
 # Load Dockerfiles
@@ -14,8 +15,11 @@ jvm_baseline_path = Path(__file__).parents[4] / "evaluation" / "scripts" / "jvm_
 python_baseline = python_baseline_path.read_text()
 jvm_baseline = jvm_baseline_path.read_text()
 
-PYTHON_SETUP_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """Your task is to generate a bash script that will set up a Python development environment for a repository mounted in the current directory.
+PYTHON_SETUP_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """Your task is to generate a bash script that will set up a Python development environment for a repository mounted in the current directory.
 You will be provided with repository context. Follow the build instructions to generate the script.
 
 A very universal script might look like this:
@@ -43,19 +47,27 @@ IMPORTANT:
 - Base all decisions on the provided repository context. Follow the context instructions.
 - Don't use sudo - the script will run as root
 - if you use pyenv install, please use -f flag to force the installation. For example: `pyenv install -f $PYTHON_VERSION`
-- The script must be enclosed in ```bash``` code blocks"""),
-    ("user", """Build Instructions:
+- The script must be enclosed in ```bash``` code blocks""",
+        ),
+        (
+            "user",
+            """Build Instructions:
 {build_instructions}
 
 Repository Context:
 {context}
 
 Generate a complete bash script that will set up this Python environment.
-The script must be enclosed in ```bash``` code blocks, it can rely on the tools available in the Docker environment.""")
-])
+The script must be enclosed in ```bash``` code blocks, it can rely on the tools available in the Docker environment.""",
+        ),
+    ]
+)
 
-JVM_SETUP_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """Your task is to generate a bash script that will set up a JVM development environment.
+JVM_SETUP_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """Your task is to generate a bash script that will set up a JVM development environment.
 You will be provided with repository context and build instructions. Follow the build instructions to generate the script.
 
 A very universal script might look like this:
@@ -87,16 +99,22 @@ IMPORTANT:
 - The script must be non-interactive (use -y flags where needed)
 - Base all decisions on the provided repository context. Follow the instructions in the context.
 - Don't use sudo. The script will run as root
-- The script must be enclosed in ```bash``` code blocks"""),
-    ("user", """Build Instructions:
+- The script must be enclosed in ```bash``` code blocks""",
+        ),
+        (
+            "user",
+            """Build Instructions:
 {build_instructions}
 
 Repository Context:
 {context}
 
 Generate a complete bash script that will set up this JVM environment.
-The script must be enclosed in ```bash``` code blocks, it can rely on the tools available in the Docker environment.""")
-])
+The script must be enclosed in ```bash``` code blocks, it can rely on the tools available in the Docker environment.""",
+        ),
+    ]
+)
+
 
 def get_python_setup_prompt(state: dict) -> str:
     """Get the prompt for Python environment setup."""
@@ -106,8 +124,9 @@ def get_python_setup_prompt(state: dict) -> str:
         build_instructions=state["build_instructions"],
         context=state["context"],
         dockerfile=python_dockerfile,
-        baseline_script=python_baseline
+        baseline_script=python_baseline,
     )
+
 
 def get_jvm_setup_prompt(state: dict) -> str:
     """Get the prompt for JVM environment setup."""
@@ -115,5 +134,5 @@ def get_jvm_setup_prompt(state: dict) -> str:
         build_instructions=state["build_instructions"],
         context=state["context"],
         dockerfile=jvm_dockerfile,
-        baseline_script=jvm_baseline
-    )    
+        baseline_script=jvm_baseline,
+    )
