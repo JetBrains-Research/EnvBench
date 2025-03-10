@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:22.04
+FROM ubuntu:22.04
 
 # Set environment variables for non-interactive installs
 ENV DEBIAN_FRONTEND=noninteractive
