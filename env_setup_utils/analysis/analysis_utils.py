@@ -256,7 +256,7 @@ def analyze_python_logs(
             file_path = get_file_path(
                 logs_file,
                 caller_name="view_logs",
-                repo_id="JetBrains-Research/ai-agents-env-setup-trajectories",
+                repo_id="JetBrains-Research/EnvBench-trajectories",
                 no_cache=no_cache,
             )
 
@@ -324,7 +324,7 @@ def analyze_exit_codes(
             file_path = get_file_path(
                 logs_file,
                 caller_name="view_logs",
-                repo_id="JetBrains-Research/ai-agents-env-setup-trajectories",
+                repo_id="JetBrains-Research/EnvBench-trajectories",
                 no_cache=no_cache,
             )
 
@@ -394,7 +394,7 @@ def load_log_files(
             file_path = get_file_path(
                 logs_file,
                 caller_name="view_logs",
-                repo_id="JetBrains-Research/ai-agents-env-setup-trajectories",
+                repo_id="JetBrains-Research/EnvBench-trajectories",
                 no_cache=no_cache,
             )
 

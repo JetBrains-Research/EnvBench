@@ -9,7 +9,7 @@ agent:
 
   instruction_provider:
     _target_: src.context_providers.build_instructions.SimpleREADMEEnvSetupInstructionProvider
-    dataset_name: JetBrains-Research/ai-agents-env-setup
+    dataset_name: JetBrains-Research/EnvBench
     language: java
 
   max_iterations: 30
@@ -19,7 +19,7 @@ data_source:
 
   hf:
     _target_: env_setup_utils.data_sources.HFDataSource
-    hub_name: JetBrains-Research/ai-agents-env-setup
+    hub_name: JetBrains-Research/EnvBench
     configs:
       - splits
     split: jvm_baseline_failure
@@ -37,14 +37,14 @@ docker:
   container_start_timeout: 300
   max_num_chars_bash_output: 5000
   bash_timeout: 360
-  hf_name: JetBrains-Research/ai-agents-env-setup
+  hf_name: JetBrains-Research/EnvBench
   output_dir: /mnt/data/repos
   language: jvm
   clear_repo: false
 
 hf:
   upload: true
-  repo_id: JetBrains-Research/ai-agents-env-setup-trajectories
+  repo_id: JetBrains-Research/EnvBench-trajectories
   path_in_repo: oss/jvm_react_gpt-4o_2025-02-01
 
 #langsmith_project: env-setup-jvm-oss

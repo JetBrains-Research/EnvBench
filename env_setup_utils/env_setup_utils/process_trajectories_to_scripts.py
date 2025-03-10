@@ -63,7 +63,7 @@ def parse_script_from_trajectory(trajectory: List[Dict[str, Any]]) -> str:
 
 
 if __name__ == "__main__":
-    TRAJECTORIES_DATASET = "JetBrains-Research/ai-agents-env-setup-trajectories"
+    TRAJECTORIES_DATASET = "JetBrains-Research/EnvBench-trajectories"
 
     parser = argparse.ArgumentParser()
     parser.add_argument(

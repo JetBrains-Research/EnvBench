@@ -8,12 +8,12 @@ input:
   use_scripts: false
   mode: hf
   hf:
-    repo_id: "JetBrains-Research/ai-agents-env-setup"
+    repo_id: "JetBrains-Research/EnvBench"
 #    path_in_repo: readmes/python_singlerepo.jsonl
     path_in_repo: readmes/jvm.jsonl
   local: path/to/local/file
   repos_archives:
-    repo_id: "JetBrains-Research/ai-agents-env-setup"
+    repo_id: "JetBrains-Research/EnvBench"
   columns:
     repo_name: repository
     commit_sha: revision
@@ -21,10 +21,8 @@ input:
 output:
   mode: hf
   hf:
-    repo_id: JetBrains-Research/ai-agents-env-setup-eval
-#    path_in_repo: debug
-#    path_in_repo: oss/python_full_baseline-2025-01-07
-    path_in_repo: oss/jvm_full_baseline_2025-01-07
+    repo_id: JetBrains-Research/EnvBench
+    path_in_repo: eval/jvm_full_baseline_2025-01-07
   keep_local_archives: false
   keep_local_jsonl: false
 docker:

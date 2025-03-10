@@ -26,7 +26,7 @@ async def test_pyenv_commands():
         container_start_timeout=300,
         bash_timeout=120,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -52,7 +52,7 @@ async def test_truncating_output():
         container_start_timeout=300,
         bash_timeout=120,
         max_num_chars_bash_output=2,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -74,7 +74,7 @@ async def test_already_downloaded_repo(tmp_path):
         f"/{os.path.expanduser('~')}/tmp/repos/Lightning-AI__litgpt@0c609550dfb61699ee513defd64da64634ee3788"
     ):
         repo_downloader = RepoDownloader(
-            hf_name="JetBrains-Research/ai-agents-env-setup",
+            hf_name="JetBrains-Research/EnvBench",
             output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
             language="python",
         )
@@ -113,7 +113,7 @@ async def test_already_downloaded_repo(tmp_path):
         container_start_timeout=300,
         bash_timeout=120,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -136,7 +136,7 @@ async def test_apt_get():
         container_start_timeout=300,
         bash_timeout=120,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -162,7 +162,7 @@ async def test_pyenv():
         container_start_timeout=300,
         bash_timeout=300,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -191,7 +191,7 @@ async def test_timeout_container_restart_multiple_commands():
         container_start_timeout=300,
         bash_timeout=5,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -214,7 +214,7 @@ async def test_timeout_container_restart():
         container_start_timeout=300,
         bash_timeout=5,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -249,7 +249,7 @@ async def test_python_packages(timeout):
         container_start_timeout=300,
         bash_timeout=timeout,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -294,7 +294,7 @@ async def test_repo_structure(timeout):
         container_start_timeout=300,
         bash_timeout=timeout,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -398,7 +398,7 @@ async def test_timeout():
         container_start_timeout=300,
         bash_timeout=5,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -420,7 +420,7 @@ async def test_multiple_commands_consistency(timeout):
         container_start_timeout=300,
         bash_timeout=timeout,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -446,7 +446,7 @@ async def test_multiple_commands_consistency_revert(timeout):
         container_start_timeout=300,
         bash_timeout=timeout,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -481,7 +481,7 @@ async def test_concurrent_execution():
         container_start_timeout=300,
         bash_timeout=60,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="python",
     )
@@ -523,7 +523,7 @@ async def test_jvm_packages(timeout):
         container_start_timeout=300,
         bash_timeout=timeout,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="jvm",
     )
@@ -566,7 +566,7 @@ async def test_jvm_bash_terminal_toolkit(timeout=60):
         container_start_timeout=300,
         bash_timeout=timeout,
         max_num_chars_bash_output=16000,
-        hf_name="JetBrains-Research/ai-agents-env-setup",
+        hf_name="JetBrains-Research/EnvBench",
         output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
         language="jvm",
     )

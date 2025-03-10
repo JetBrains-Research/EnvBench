@@ -8,7 +8,7 @@ from huggingface_hub import HfFileSystem, hf_hub_download
 
 from analysis.cache_manager import CacheManager
 
-DEFAULT_REPO = "JetBrains-Research/ai-agents-env-setup-trajectories"
+DEFAULT_REPO = "JetBrains-Research/EnvBench-trajectories"
 DEFAULT_FILES = {"scripts_viewer": "scripts.jsonl", "view_logs": "results.jsonl"}
 
 # Initialize cache manager as a module-level singleton
@@ -95,7 +95,7 @@ def get_dir_path(
 
     The function maps local paths to Hugging Face repository paths. For example:
     'oss/python_singlerepo-2025-01-02/trajectories' will be downloaded from
-    'JetBrains-Research/ai-agents-env-setup-trajectories/oss/python_singlerepo-2025-01-02/trajectories'
+    'JetBrains-Research/EnvBench-trajectories/oss/python_singlerepo-2025-01-02/trajectories'
 
     Args:
         dir_path: Path to the directory (e.g., 'oss/python_singlerepo-2025-01-02/trajectories').
