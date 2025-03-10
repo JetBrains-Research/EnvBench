@@ -1,56 +1,79 @@
-# 🌱⚙️ Environment Setup
+# 🌱⚙️  Environment Setup
 
-Repository for **Environment Setup** project.
+Automating development environment setup
 
-## Repository structure
+<p align="center">
+  <img src=".github/overview.png" alt="Environment Setup Pipeline Overview" width="800"/>
+</p>
 
-Currently, the repository consists of multiple subprojects. Refer to READMEs under each folder for more details
+## Overview
 
-* Data Collection: available under [`data_collection`](data_collection/README.md) folder.
-* EDA
-  * Python: available under [`eda/python`](eda/python/README.md) folder.
-* Utils: available under [`env_setup_utils`](env_setup_utils/README.md) folder.
-* Inference: available under [`inference`](inference/README.md) folder.
-* Evaluation: available under [`qodana-eval`](qodana-eval/README.md) folder. **TODO**
+This project automates the process of setting up development environments by analyzing project requirements and configuring the necessary tools and dependencies. It supports both Python and JVM-based projects.
 
-## Experiments 101
+## Prerequisites
 
-> **TODO**
+- [Poetry](https://python-poetry.org/) for Python dependency management
+- [Docker](https://www.docker.com/) for running isolated environments
 
-All the results from our experiments are available in 🤗 [`JetBrains-Research/EnvBench-trajectories`](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories) dataset (private! you need to join the org!).
-
-[Here](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories/tree/main/python_baseline) is an example of the structure of the folder for one of the experiments:
+## Project Structure
 
 ```
-/experiment_folder
-├── qodana_archives/
-├── trajectories/
-├── commit_hash.txt
-├── config.yaml
-├── results.jsonl
-└── scripts.jsonl
+env-setup/
+├── data_collection/    # Repository analysis and data gathering tools
+├── env_setup_utils/    # Core utilities for inference and evaluation
+├── evaluation/         # Test suites for Python and JVM environments
+└── inference/          # Environment setup agents and Docker environments
 ```
 
-### Step 1: obtain agent trajectories
+## Installation
 
-The first thing you need to do is gather trajectories from one of our agents. This step gets you [`trajectories`](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories/tree/main/python_baseline/trajectories) directory that contains the trajectories an agent took for each repository as well as [`config.yaml`](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories/blob/main/python_baseline/config.yaml) and [`commit_hash.txt`](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories/blob/main/python_baseline/commit_hash.txt) to indicate the agent configuration used and the state of the repository at the moment of launching an experiment.
 
-To do this, you need to run `run_inference.py` from `inference` folder in this repo; refer to corresponding [README](ideformer_client/README.md) for further details.
+Install dependencies for each component:
+```bash
+poetry install -C evaluation
+poetry install -C inference
+poetry install -C env_setup_utils
+poetry install -C data_collection
+```
 
-### Step 2: obtain Bash scripts from trajectories
+## Usage
 
-Next, you need to get a Bash script from each trajectory. This step gets you [`scripts.jsonl`](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories/blob/main/python_baseline/scripts.jsonl) file.
+### Running the Full Pipeline
 
-The preferrable way to achieve this is to run [`process_trajectories_to_scripts.py`](https://jetbrains.team/p/ml-4-se-lab/repositories/ai-agents-env-setup/files/env_setup_utils/env_setup_utils/process_trajectories_to_scripts.py) script from `env-setup-utils` folder. 
+To run the complete pipeline (inference and evaluation):
 
-### Step 3: obtain evaluation results
+```bash
+cd env_setup_utils && poetry run python scripts/full_pipeline.py
+```
 
-Next, you need to launch evaluation on each repository with the scripts obtained on the previous step. This step gets you [`qodana_archives`](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories/tree/main/python_baseline/qodana_archives) directory with archives with Qodana outputs for each repository and [`results.jsonl`](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories/blob/main/python_baseline/results.jsonl) file indicating other details like execution time and exit codes.
+Results are automatically uploaded to the `trajectories` repository on HuggingFace.
 
-To do this, refer to [README](qodana-eval/README.md) from `qodana-eval` folder.
+### Running Specific Agents
 
-### Step 4: compute metrics from Qodana archives
+Use Hydra to configure and run specific agents:
 
-Finally, you can use the obtained Qodana results to get metrics on how well the agent performed! For this, we have an 🤗 [Evaluate](https://huggingface.co/docs/evaluate/en/index) metric. 
+```bash
+cd env_setup_utils
 
-Refer to 🤗 [`JetBrains-Research/qodana_pass`](https://huggingface.co/spaces/JetBrains-Research/qodana_pass) for further details.
+# Run JVM environment setup
+poetry run python scripts/full_pipeline.py -cn jvm
+
+# Run Python environment setup
+poetry run python scripts/full_pipeline.py -cn python
+```
+
+For all configuration options, see [conf/defaults.yaml](env_setup_utils/scripts/conf/defaults.yaml).
+
+## Documentation
+
+For detailed documentation on each component:
+
+- [Data Collection](data_collection/README.md)
+- [Environment Setup Utils](env_setup_utils/README.md)
+- [Evaluation](evaluation/README.md)
+- [Inference](inference/README.md)
+
+## Implementation details
+- [Agents and Prompts](inference/src/agents)
+- [Dockerfiles](env_setup_utils/scripts)
+- [Deterministic and Evaluation Scripts](evaluation/scripts)
