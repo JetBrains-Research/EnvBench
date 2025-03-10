@@ -1,0 +1,19 @@
+defaults:
+  - defaults
+  - _self_
+
+# Repeats defaults, but for stability
+
+tag: oss/python
+
+inference:
+  agent:
+    agent_type: python
+  data_source:
+    hf:
+      split: python_baseline_failure
+  docker:
+    image: ghcr.io/waleko/envsetup-python:latest
+
+evaluation:
+  language: python

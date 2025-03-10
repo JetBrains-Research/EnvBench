@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "ai-agents-env-setup-inference"
+version = "0.1.0"
+description = "Code associated with agent inference from Environment Setup project."
+authors = [
+    "Alexandra Eliseeva <alexandra.eliseeva@jetbrains.com>",
+    "Alexander Kovrigin <alexander.kovrigin@jetbrains.com>",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+docker = "^7.1.0"
+datasets = "^2.19.0"
+hydra-core = "^1.3.2"
+jsonlines = "^4.0.0"
+env_setup_utils = { path = "../env_setup_utils", develop = true }
+streamlit = "^1.37.1"
+aiodocker = "^0.23.0"
+aiohttp = "3.10.10"
+langgraph = "^0.2.60"
+python-dotenv = "^1.0.1"
+langchain-openai = "^0.2.14"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.5.0"
+pytest = "^8.2.0"
+ruff = "^0.3.2"
+pyright = "^1.1.367"
+isort = "^5.13.2"
+pytest-asyncio = "^0.24.0"
+pytest-timeout = "^2.3.1"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.isort]
+profile = "black"
+force_sort_within_sections = true
+order_by_type = true
+
+[tool.mypy]
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = []
+ignore_missing_imports = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

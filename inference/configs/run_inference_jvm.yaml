@@ -1,0 +1,55 @@
+agent:
+  agent_type: jvm
+  toolkit: bash_jvm
+
+  model:
+    _target_: langchain_openai.ChatOpenAI
+    model: gpt-4o-2024-11-20
+    temperature: 0
+
+  instruction_provider:
+    _target_: src.context_providers.build_instructions.SimpleREADMEEnvSetupInstructionProvider
+    dataset_name: JetBrains-Research/ai-agents-env-setup
+    language: java
+
+  max_iterations: 30
+
+data_source:
+  type: hf
+
+  hf:
+    _target_: env_setup_utils.data_sources.HFDataSource
+    hub_name: JetBrains-Research/ai-agents-env-setup
+    configs:
+      - splits
+    split: jvm_baseline_failure
+
+  local:
+    _target_: env_setup_utils.data_sources.LocalFileDataSource
+    path: path/to/local/file  # set to necessary file
+
+docker:
+  image: ghcr.io/waleko/envsetup-jvm:latest
+  error_message:
+  command:
+  env_vars: {}
+  repository_workdir: true
+  container_start_timeout: 300
+  max_num_chars_bash_output: 5000
+  bash_timeout: 360
+  hf_name: JetBrains-Research/ai-agents-env-setup
+  output_dir: /mnt/data/repos
+  language: jvm
+  clear_repo: false
+
+hf:
+  upload: true
+  repo_id: JetBrains-Research/ai-agents-env-setup-trajectories
+  path_in_repo: oss/jvm_react_gpt-4o_2025-02-01
+
+#langsmith_project: env-setup-jvm-oss
+
+log_trajectory: true
+logging_dir: trajectories_jvm_react_gpt-4o_2025-02-01
+max_concurrent: 16
+rewrite_trajectories: true

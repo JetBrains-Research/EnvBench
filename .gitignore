@@ -1,0 +1,10 @@
+.**/env
+**/.idea/
+data
+.cadence
+**/__pycache__/**
+.DS_Store
+**/trajectories/**
+**/outputs/**
+**/wandb/**
+

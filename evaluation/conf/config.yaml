@@ -1,0 +1,54 @@
+do_dry_run: true
+
+#language: python
+language: jvm
+
+eval_tool: opensource
+input:
+  use_scripts: false
+  mode: hf
+  hf:
+    repo_id: "JetBrains-Research/ai-agents-env-setup"
+#    path_in_repo: readmes/python_singlerepo.jsonl
+    path_in_repo: readmes/jvm.jsonl
+  local: path/to/local/file
+  repos_archives:
+    repo_id: "JetBrains-Research/ai-agents-env-setup"
+  columns:
+    repo_name: repository
+    commit_sha: revision
+    script: script
+output:
+  mode: hf
+  hf:
+    repo_id: JetBrains-Research/ai-agents-env-setup-eval
+#    path_in_repo: debug
+#    path_in_repo: oss/python_full_baseline-2025-01-07
+    path_in_repo: oss/jvm_full_baseline_2025-01-07
+  keep_local_archives: false
+  keep_local_jsonl: false
+docker:
+  create_container_timeout: 180
+  container_timeout: 600
+  qodana_image: # https://www.jetbrains.com/help/qodana/docker-images.html
+    java: 'docker.io/jetbrains/qodana-jvm'
+    kotlin: 'docker.io/jetbrains/qodana-jvm'
+    python: 'ghcr.io/waleko/envsetup-python'
+    android: 'docker.io/jetbrains/qodana-android'
+    jvm: 'ghcr.io/waleko/envsetup-jvm'
+operation:
+  dirs:
+    tmp: './tmp'
+    repo_data: './tmp/repo_data'
+    json_results: './tmp/results/json'
+    qodana_results: './tmp/results/qodana'
+  pool_config:
+    max_workers: 1
+    chunksize: 1
+exit_codes:
+  timeout: -127
+  unknown_failure: -999
+  docker_failure: -888
+  create_container_failure: -777
+  download_failure: -666
+  script_failure: -555

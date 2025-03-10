@@ -1,0 +1,10 @@
+tmp
+data
+outputs
+.cadence
+.env
+**/__pycache__
+**/.DS_Store
+
+wandb/
+analysis_output/

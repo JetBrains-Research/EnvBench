@@ -1,0 +1,57 @@
+agent:
+  agent_type: installamatic
+  toolkit: installamatic
+
+  model:
+    _target_: langchain_openai.ChatOpenAI
+    model: gpt-4o-mini-2024-07-18
+    temperature: 0
+
+  instruction_provider:
+    _target_: src.context_providers.build_instructions.SimpleREADMEEnvSetupInstructionProvider
+    dataset_name: JetBrains-Research/ai-agents-env-setup
+    language: python
+
+  max_iterations: 30
+  language: jvm
+
+data_source:
+  type: hf
+
+  hf:
+    _target_: env_setup_utils.data_sources.HFDataSource
+    hub_name: JetBrains-Research/ai-agents-env-setup
+    configs:
+      - splits
+    split: python_baseline_failure
+
+  local:
+    _target_: env_setup_utils.data_sources.LocalFileDataSource
+    path: some_path
+
+docker:
+  image: ghcr.io/waleko/envsetup-jvm:latest
+  error_message:
+  command:
+  env_vars: {}
+  repository_workdir: true
+  container_start_timeout: 300
+  max_num_chars_bash_output: 5000
+  bash_timeout: 360
+  hf_name: JetBrains-Research/ai-agents-env-setup
+  output_dir: ~/tmp/installamatic_2025-02-02
+  language: jvm
+  clear_repo: false
+
+hf:
+  upload: true
+  repo_id: JetBrains-Research/ai-agents-env-setup-trajectories
+  path_in_repo: oss/jvm_installamatic_gpt-4o-mini_2025-02-03
+
+langsmith_project: env-setup-installamatic-py-gpt-4o-mini
+
+log_trajectory: true
+logging_dir: trajectories_jvm_installamatic_gpt-4o-mini_2025-02-03
+max_concurrent: 16
+rewrite_trajectories: true
+global_timeout: 1800

@@ -1,0 +1,10 @@
+defaults:
+  - python
+  - _self_
+
+tag: oss/python-procedural
+
+inference:
+  agent:
+    agent_type: procedural-python
+

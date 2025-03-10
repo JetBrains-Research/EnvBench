@@ -1,0 +1,9 @@
+defaults:
+  - jvm
+  - _self_
+
+tag: oss/jvm-procedural
+
+inference:
+  agent:
+    agent_type: procedural-jvm
