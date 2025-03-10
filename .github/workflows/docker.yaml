@@ -25,4 +25,4 @@ jobs:
           context: .
           file: env_setup_utils/scripts/${{ matrix.language }}.Dockerfile
           push: true
-          tags: ghcr.io/JetBrains-Research/EnvBench-${{ matrix.language }}:latest
+          tags: ghcr.io/jetbrains-research/envbench-${{ matrix.language }}:latest
