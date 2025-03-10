@@ -38,7 +38,7 @@ class RepoDownloader:
             logging.debug(f"Downloading {repo_name} from Huggingface...")
             download_path = hf_hub_download(
                 repo_id=self.hf_name,
-                filename=f"repos/{self.language}/{repo_name.replace('/', '__')}.tar.gz",
+                filename=f"repos/final/{self.language}/{repo_name.replace('/', '__')}.tar.gz",
                 repo_type="dataset",
                 local_dir=self.output_dir,
             )
