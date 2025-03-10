@@ -28,18 +28,15 @@ output:
 docker:
   create_container_timeout: 180
   container_timeout: 600
-  qodana_image: # https://www.jetbrains.com/help/qodana/docker-images.html
-    java: 'docker.io/jetbrains/qodana-jvm'
-    kotlin: 'docker.io/jetbrains/qodana-jvm'
-    python: 'ghcr.io/waleko/envsetup-python'
-    android: 'docker.io/jetbrains/qodana-android'
-    jvm: 'ghcr.io/waleko/envsetup-jvm'
+  image:
+    python: 'ghcr.io/jetbrains-research/envbench-python'
+    jvm: 'ghcr.io/jetbrains-research/envbench-jvm'
 operation:
   dirs:
     tmp: './tmp'
     repo_data: './tmp/repo_data'
     json_results: './tmp/results/json'
-    qodana_results: './tmp/results/qodana'
+    eval_results: './tmp/results/eval'
   pool_config:
     max_workers: 1
     chunksize: 1

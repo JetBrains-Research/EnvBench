@@ -8,9 +8,7 @@ agent:
     temperature: 0
 
   instruction_provider:
-    _target_: src.context_providers.build_instructions.SimpleREADMEEnvSetupInstructionProvider
-    dataset_name: JetBrains-Research/EnvBench
-    language: python
+    _target_: src.context_providers.build_instructions.EmptyEnvSetupInstructionProvider
 
   max_iterations: 30
   language: jvm
@@ -30,7 +28,7 @@ data_source:
     path: some_path
 
 docker:
-  image: ghcr.io/waleko/envsetup-jvm:latest
+  image: ghcr.io/jetbrains-research/envbench-jvm:latest
   error_message:
   command:
   env_vars: {}
@@ -44,7 +42,7 @@ docker:
   clear_repo: false
 
 hf:
-  upload: true
+  upload: false
   repo_id: JetBrains-Research/EnvBench-trajectories
   path_in_repo: oss/jvm_installamatic_gpt-4o-mini_2025-02-03
 

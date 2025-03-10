@@ -11,7 +11,7 @@ inference:
     hf:
       split: jvm_baseline_failure
   docker:
-    image: ghcr.io/waleko/envsetup-jvm:latest
+    image: ghcr.io/jetbrains-research/envbench-jvm:latest
 
 evaluation:
   language: jvm

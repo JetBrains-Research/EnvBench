@@ -10,8 +10,8 @@ from src.async_bash_executor import AsyncBashExecutor
 
 load_dotenv()
 
-docker_image = "ghcr.io/waleko/envsetup-python:latest"
-jvm_docker_image = "ghcr.io/waleko/envsetup-jvm:latest"
+docker_image = "ghcr.io/jetbrains-research/envbench-python:latest"
+jvm_docker_image = "ghcr.io/jetbrains-research/envbench-jvm:latest"
 
 
 @pytest.mark.asyncio

@@ -159,7 +159,7 @@ def run_opensource(
         # Run the build script inside a Docker container
         logging.info(f"Starting Docker container for {repo_name}")
         container = docker_client.containers.run(
-            image=cfg.docker.qodana_image[cfg.language],
+            image=cfg.docker.image[cfg.language],
             volumes=volumes,
             entrypoint="/bin/bash",
             command="-c '/data/project/build.sh'",

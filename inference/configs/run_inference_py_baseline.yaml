@@ -8,9 +8,7 @@ agent:
     temperature: 0
 
   instruction_provider:
-    _target_: src.context_providers.build_instructions.SimpleREADMEEnvSetupInstructionProvider
-    dataset_name: JetBrains-Research/EnvBench
-    language: python
+    _target_: src.context_providers.build_instructions.EmptyEnvSetupInstructionProviders
 
   max_iterations: 30
 
@@ -29,7 +27,7 @@ data_source:
     path: python_repos.jsonl
 
 docker:
-  image: 'ghcr.io/waleko/envsetup-python'
+  image: 'ghcr.io/jetbrains-research/envbench-python'
   error_message:
   command:
   env_vars: {}
@@ -43,7 +41,7 @@ docker:
   clear_repo: false
 
 hf:
-  upload: true
+  upload: false
   repo_id: JetBrains-Research/EnvBench-trajectories
   path_in_repo: oss/python_baseline_langgraph_2025-01-25
 

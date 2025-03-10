@@ -21,9 +21,7 @@ inference:
       model: gpt-4o-mini-2024-07-18
       temperature: 0
     instruction_provider:
-      _target_: src.context_providers.build_instructions.SimpleREADMEEnvSetupInstructionProvider
-      dataset_name: JetBrains-Research/EnvBench
-      language: python
+      _target_: src.context_providers.build_instructions.EmptyEnvSetupInstructionProvider
     max_iterations: 30
   data_source:
     type: hf
@@ -37,7 +35,7 @@ inference:
       _target_: env_setup_utils.data_sources.LocalFileDataSource
       path: python_repos.jsonl
   docker:
-    image: ghcr.io/waleko/envsetup-python:latest
+    image: ghcr.io/jetbrains-research/envbench-python:latest
     error_message:
     command:
     env_vars: {}
@@ -50,7 +48,7 @@ inference:
     language: python
     clear_repo: true
   hf:
-    upload: true
+    upload: false
     repo_id: JetBrains-Research/EnvBench-trajectories
     path_in_repo: ${run_name}
 
@@ -90,18 +88,15 @@ evaluation:
   docker:
     create_container_timeout: 180
     container_timeout: 600
-    qodana_image: # https://www.jetbrains.com/help/qodana/docker-images.html
-      java: 'docker.io/jetbrains/qodana-jvm'
-      kotlin: 'docker.io/jetbrains/qodana-jvm'
-      python: 'ghcr.io/waleko/envsetup-python'
-      android: 'docker.io/jetbrains/qodana-android'
-      jvm: 'ghcr.io/waleko/envsetup-jvm'
+    image:
+      python: 'ghcr.io/jetbrains-research/envbench-python'
+      jvm: 'ghcr.io/jetbrains-research/envbench-jvm'
   operation:
     dirs:
       tmp: '${tmp_dir}/tmp-${run_name}'
       repo_data: '${data_path}/repo_data'
       json_results: '${tmp_dir}/tmp-${run_name}/results/json'
-      qodana_results: '${tmp_dir}/tmp-${run_name}/results/qodana'
+      eval_results: '${tmp_dir}/tmp-${run_name}/results/eval'
     pool_config:
       max_workers: ${eval_workers}
       chunksize: 1

@@ -13,7 +13,7 @@ inference:
     hf:
       split: python_baseline_failure
   docker:
-    image: ghcr.io/waleko/envsetup-python:latest
+    image: ghcr.io/jetbrains-research/envbench-python:latest
 
 evaluation:
   language: python
