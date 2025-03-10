@@ -1,6 +1,5 @@
-# 🌱⚙️  Environment Setup
-
-Automating development environment setup
+# 🌱⚙️ EnvBench
+A Benchmark for Automated Environment Setup
 
 <p align="center">
   <img src=".github/overview.png" alt="Environment Setup Pipeline Overview" width="800"/>
@@ -26,7 +25,6 @@ env-setup/
 ```
 
 ## Installation
-
 
 Install dependencies for each component:
 ```bash
@@ -73,7 +71,33 @@ For detailed documentation on each component:
 - [Evaluation](evaluation/README.md)
 - [Inference](inference/README.md)
 
-## Implementation details
+## Implementation Details
+
 - [Agents and Prompts](inference/src/agents)
 - [Dockerfiles](env_setup_utils/scripts)
 - [Deterministic and Evaluation Scripts](evaluation/scripts)
+
+## Downloads
+
+### Data
+- [Dataset](https://huggingface.co/datasets/JetBrains-Research/EnvBench)
+- [Trajectories](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories)
+
+## Citation
+
+If you find our work helpful, please use the following citation:
+
+```
+@inproceedings{
+eliseeva2025envbench,
+title={EnvBench: A Benchmark for Automated Environment Setup},
+author={Aleksandra Eliseeva and Alexander Kovrigin and Ilia Kholkin and Egor Bogomolov and Yaroslav Zharov},
+booktitle={ICLR 2025 Third Workshop on Deep Learning for Code},
+year={2025},
+url={https://openreview.net/forum?id=izy1oaAOeX}
+}
+```
+
+## License
+
+MIT. Check `LICENSE`.
