@@ -62,7 +62,7 @@ inference:
     clear_repo: true
   hf:
     upload: true
-    repo_id: ${${traj_repo_id}}
+    repo_id: ${traj_repo_id}
     path_in_repo: ${run_name}
 
   # langsmith_project: env-setup-py-oss
@@ -82,7 +82,7 @@ evaluation:
     use_scripts: true
     mode: hf
     hf:
-      repo_id: ${${traj_repo_id}}
+      repo_id: ${traj_repo_id}
       path_in_repo: ${run_name}/scripts.jsonl
     local: path/to/local/file
     repos_archives:
@@ -94,7 +94,7 @@ evaluation:
   output:
     mode: hf
     hf:
-      repo_id: ${${traj_repo_id}}
+      repo_id: ${traj_repo_id}
       path_in_repo: ${run_name}
     keep_local_archives: false
     keep_local_jsonl: false
