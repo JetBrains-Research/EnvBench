@@ -1,0 +1,4 @@
+model:
+  _target_: langchain_openai.ChatOpenAI
+  model: gpt-4o-mini
+  temperature: 0

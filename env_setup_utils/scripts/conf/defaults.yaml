@@ -1,14 +1,27 @@
-# Pipeline configuration
+defaults:
+ - llm@inference.agent: gpt-4o-mini
+ - _self_
+
+# Data paths
 tmp_dir: ${oc.env:TEMP_DIR,/tmp/envsetup}  # Default to /tmp/envsetup if TEMP_DIR not set
+data_path: ${oc.env:DATA_ROOT,/mnt/data}
+
+# Run configuration
 tag: oss/envsetup-python  # Static tag
-run_name: ${tag}-${now:%Y-%m-%d_%H-%M-%S}
+run_name: ${tag}_${inference.agent.model.model}_${now:%Y-%m-%d_%H-%M-%S}
 file_name: ${run_name} # Default config name
+traj_repo_id: JetBrains-Research/EnvBench-trajectories # Trajectories repo on HF
+
+# WandB configuration
 wandb_project: envsetup-oss  # Default wandb project name
 use_wandb: true
+
+# Steps to skip
 skip_inference: false
 skip_processing: false
 skip_evaluation: false
-data_path: ${oc.env:DATA_ROOT,/mnt/data}
+
+# Number of workers for inference and evaluation
 inference_workers: 16
 eval_workers: 16
 
@@ -48,8 +61,8 @@ inference:
     language: python
     clear_repo: true
   hf:
-    upload: false
-    repo_id: JetBrains-Research/EnvBench-trajectories
+    upload: true
+    repo_id: ${trajectories_repo_id}
     path_in_repo: ${run_name}
 
   # langsmith_project: env-setup-py-oss
@@ -69,7 +82,7 @@ evaluation:
     use_scripts: true
     mode: hf
     hf:
-      repo_id: "JetBrains-Research/EnvBench-trajectories"
+      repo_id: ${trajectories_repo_id}
       path_in_repo: ${run_name}/scripts.jsonl
     local: path/to/local/file
     repos_archives:
@@ -81,7 +94,7 @@ evaluation:
   output:
     mode: hf
     hf:
-      repo_id: JetBrains-Research/EnvBench-trajectories
+      repo_id: ${trajectories_repo_id}
       path_in_repo: ${run_name}
     keep_local_archives: false
     keep_local_jsonl: false
