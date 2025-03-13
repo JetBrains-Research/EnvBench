@@ -28,24 +28,37 @@ uv sync
 
 ### Running the Pipeline
 
+Set the following environment variables:
+
+```bash
+export HF_TOKEN=<your-huggingface-token>
+export OPENAI_API_KEY=<your-openai-api-key>
+# export WANDB_API_KEY=<your-wandb-api-key> # optional, wandb is disabled by default
+# export DATA_ROOT=<path-to-your-data-root>  # optional, default is ./data
+# export TEMP_DIR=<path-to-your-temp-dir>  # optional, default is ./tmp
+```
+
 To run the complete pipeline (inference and evaluation):
 
 ```bash
-uv run envbench \
-    -cn python-bash \
-    llm@inference.agent=gpt-4o-mini \
-    traj_repo_id=<your-hf-username>/<your-repo-name> \ # repository to save trajectories
-    use_wandb=true
+uv run envbench -cn python-bash traj_repo_id=<your-hf-username>/<your-repo-name>
 ```
 
 Results are automatically uploaded to the provided trajectories repository on HuggingFace.
 
-For all configuration options, including different agents and llms, see [conf](conf) directory with Hydra configs.
+For all configuration options, including different agents and llms, see [conf](conf) directory with Hydra configs. For example, to run Zero-Shot gpt-4o on JVM data with W&B logging, you can use the following command:
+
+```bash
+uv run envbench -cn jvm-zeroshot \
+    llm@inference.agent=gpt-4o \
+    traj_repo_id=<your-hf-username>/<your-repo-name> \
+    use_wandb=true
+```
 
 If you want to run the pipeline only for evaluation, you can use the following command:
 
 ```bash
-uv run envbench -cn python-bash skip_inference=true skip_processing=true run_name<your-run-name>
+uv run envbench -cn python-bash skip_inference=true skip_processing=true run_name=<your-run-name>
 ```
 
 Alternatively, take a look at the [evaluation/main.py](evaluation/main.py) file for more details on how to run the evaluation step.

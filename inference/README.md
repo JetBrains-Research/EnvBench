@@ -1,4 +1,4 @@
-# 🌱⚙️ Environment Setup: Inference
+# 🌱⚙️ EnvBench: Inference
 
 This repository contains the code for running agents on Environment Setup datasets.
 
@@ -15,45 +15,13 @@ This repository contains the code for running agents on Environment Setup datase
 
 ### Install dependencies
 
-[Poetry](https://python-poetry.org/) is used for dependencies management. To install dependencies, go to root directory and run:
+[uv](https://github.com/astral-sh/uv) is used for dependencies management. To install dependencies, go to root directory and run:
 
 ```shell
-poetry install
+uv venv --python 3.12
+source .venv/bin/activate
+uv sync
 ```
-
-**Note**. You can use [`pyenv`](https://github.com/pyenv/pyenv) for installing and managing Python versions.
-
-1. To install a specific Python version (e.g., `3.11.8`) with `pyenv`, run:
- 
-    ```shell
-    pyenv install 3.11.8
-    ```
-    
-    You can also check the already installed versions via:
-    
-    ```shell
-    pyenv versions
-    ```
-
-2. Select a specific version for the current shell session: 
-
-    ```shell
-    pyenv shell 3.11.8
-    ```
-    
-    Check that Python version was selected correctly via:
-    
-    ```shell
-    python --version
-    ```
-
-3. Configure Poetry to use a specific Python executable.
-
-    ```shell
-    poetry env use `which python`
-    ```
-    
-    All set! Proceed to installation.
 
 ### Configure
 
@@ -64,7 +32,7 @@ For more information about available options, see `EnvSetupRunnerConfig` in [`co
 ### Run
 
 ```shell
-poetry run python run_inference.py --config-name your-config-name
+python run_inference.py --config-name your-config-name
 ```
 
 ## About
@@ -94,6 +62,3 @@ For the implementation, see `BashTerminalToolkit` in [`src/toolkits/bash_termina
 > Located under [`src/context_providers`](src/context_providers).
 
 Aside from that, we provide utilities for collecting relevant context. Internally, current options parse data from our HuggingFace datasets.
-
-* For *build instructions*, the available options are located in [`src/context_providers/build_instructions.py`](src/context_providers/build_instructions.py). 
-    * As of now, primary option is `SimpleREADMEEnvSetupInstructionProvider`, which parses repositories' READMEs and includes all sections containing build-related keywords.

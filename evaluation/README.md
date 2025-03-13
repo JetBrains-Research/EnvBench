@@ -1,4 +1,4 @@
-# EnvSetup Evaluation
+# EnvBench Evaluation
 This folder contains the code for evaluating the environment setup outputs.
 
 > Kudos to [Ilia Kholkin](https://github.com/kholkinilia); this script was initially implemented by him. This folder contains a slightly modified version of [this GitHub repo](https://github.com/kholkinilia/qodana-eval). 
@@ -6,7 +6,7 @@ This folder contains the code for evaluating the environment setup outputs.
 ## How to run
 
 ```bash
-poetry run python main.py
+python main.py
 ```
 
 See [conf/config.yaml](conf/config.yaml) for the available options.
