@@ -1,34 +1,41 @@
 # 🌱⚙️ EnvBench
-A Benchmark for Automated Environment Setup
+> *A benchmark for automated development environment setup*
 
-<p align="center">
+<div align="center">
   <img src=".github/overview.png" alt="Environment Setup Pipeline Overview" width="800"/>
-</p>
+  <p><em>Overview of the EnvBench pipeline</em></p>
+</div>
 
-## Overview
+## 🔥 What's This?
 
-This project automates the process of setting up development environments by analyzing project requirements and configuring the necessary tools and dependencies. It supports both Python and JVM-based projects.
+EnvBench is a comprehensive benchmark for **automating development environment setup** - an important task in software engineering. We have collected the largest dataset to date for this task and introduced a robust framework for developing and evaluating LLM-based agents that tackle environment configuration challenges.
 
-## Prerequisites
+Our benchmark includes:
+- 📊 **994 repositories**: 329 Python and 665 JVM-based (Java, Kotlin) projects
+- 🧪 **Genuine configuration challenges**: Carefully selected repositories that cannot be configured with simple deterministic scripts
+- 📈 **Automatic evaluation metrics**: Static analysis for missing imports in Python and compilation checks for JVM languages
+- 🤖 **Evaluation of multiple approaches**: Zero-shot baselines and agentic workflows tested with GPT-4o and GPT-4o-mini
 
-- [uv](https://github.com/astral-sh/uv) for dependency management
-- [Docker](https://www.docker.com/) for running isolated environments
+Current state-of-the-art approaches achieve success rates of **6.69%** for Python and **29.47%** for JVM repositories, demonstrating that EnvBench presents significant challenges for existing methods and provides ample opportunity for future research.
 
-## Running the Benchmark
+## 🛠️ What You'll Need
 
-### Setup
+- [uv](https://github.com/astral-sh/uv) - Modern Python package management
+- [Docker](https://www.docker.com/) - For isolated environment execution
 
-Setup a virtual environment and install dependencies using uv.
+## 🏃‍♂️ Running the Benchmark
+
+### 🔧 Setup
+
+Create a virtual environment and install dependencies:
 
 ```bash
 uv venv --python 3.12
 source .venv/bin/activate
 uv sync
+
 ```
-
-### Running the Pipeline
-
-Set the following environment variables:
+Set the required environment variables:
 
 ```bash
 export HF_TOKEN=<your-huggingface-token>
@@ -38,15 +45,23 @@ export OPENAI_API_KEY=<your-openai-api-key>
 # export TEMP_DIR=<path-to-your-temp-dir>  # optional, default is ./tmp
 ```
 
-To run the complete pipeline (inference and evaluation):
+### 🚂 Pipeline Execution
+
+#### ✨ Quick Start
+
+Execute the full pipeline (inference and evaluation):
 
 ```bash
 uv run envbench -cn python-bash traj_repo_id=<your-hf-username>/<your-repo-name>
 ```
 
-Results are automatically uploaded to the provided trajectories repository on HuggingFace.
+Results are automatically uploaded to your specified HuggingFace repository.
 
-For all configuration options, including different agents and llms, see [conf](conf) directory with Hydra configs. For example, to run Zero-Shot gpt-4o on JVM data with W&B logging, you can use the following command:
+#### 🎛️ Advanced Configuration
+
+For additional configuration options, including different agents and language models, refer to the [conf](conf) directory with Hydra configurations.
+
+Example: Running Zero-Shot GPT-4o on JVM data with W&B logging:
 
 ```bash
 uv run envbench -cn jvm-zeroshot \
@@ -55,27 +70,30 @@ uv run envbench -cn jvm-zeroshot \
     use_wandb=true
 ```
 
-If you want to run the pipeline only for evaluation, you can use the following command:
+#### 🧪 Evaluation
+
+To run only the evaluation component:
 
 ```bash
 uv run envbench -cn python-bash skip_inference=true skip_processing=true run_name=<your-run-name>
 ```
 
-Alternatively, take a look at the [evaluation/main.py](evaluation/main.py) file for more details on how to run the evaluation step.
+For more evaluation options, see [evaluation/main.py](evaluation/main.py).
 
-## Implementation Details
+## 🧩 Implementation Details
 
-- [Agents and Prompts](inference/src/agents)
-- [Dockerfiles](dockerfiles)
-- [Deterministic and Evaluation Scripts](evaluation/scripts)
+- 🤖 [Agents and Prompts](inference/src/agents) - Core reasoning components
+- 🐳 [Dockerfiles](dockerfiles) - Environment containerization
+- 📊 [Evaluation Scripts](evaluation/scripts) - Benchmark assessment
 
-## Artifacts
-- [Dataset](https://huggingface.co/datasets/JetBrains-Research/EnvBench)
-- [Trajectories from the paper](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories)
+## 🏆 Resources
 
-## Citation
+- 📦 [Dataset](https://huggingface.co/datasets/JetBrains-Research/EnvBench) - Benchmark dataset
+- 📝 [Paper Trajectories](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories) - Agent trajectories from our paper
 
-If you find our work helpful, please use the following citation:
+## 📚 Citation
+
+If you find this work useful for your research, please use the following citation:
 
 ```
 @inproceedings{
@@ -88,6 +106,6 @@ url={https://openreview.net/forum?id=izy1oaAOeX}
 }
 ```
 
-## License
+## ⚖️ License
 
-MIT. Check `LICENSE`.
+MIT. See `LICENSE` for details.
