@@ -11,77 +11,54 @@ This project automates the process of setting up development environments by ana
 
 ## Prerequisites
 
-- [Poetry](https://python-poetry.org/) for Python dependency management
+- [uv](https://github.com/astral-sh/uv) for dependency management
 - [Docker](https://www.docker.com/) for running isolated environments
 
-## Project Structure
+## Running the Benchmark
 
-```
-env-setup/
-├── data_collection/    # Repository analysis and data gathering tools
-├── env_setup_utils/    # Core utilities for inference and evaluation
-├── evaluation/         # Test suites for Python and JVM environments
-└── inference/          # Environment setup agents and Docker environments
-```
+### Setup
 
-## Installation
+Setup a virtual environment and install dependencies using uv.
 
-Install dependencies for each component:
 ```bash
-poetry install -C evaluation
-poetry install -C inference
-poetry install -C env_setup_utils
-poetry install -C data_collection
+uv venv --python 3.12
+source .venv/bin/activate
+uv sync
 ```
 
-## Usage
-
-### Running the Full Pipeline
+### Running the Pipeline
 
 To run the complete pipeline (inference and evaluation):
 
 ```bash
-cd env_setup_utils && poetry run python scripts/full_pipeline.py
+uv run envbench \
+    -cn python-bash \
+    llm@inference.agent=gpt-4o-mini \
+    traj_repo_id=<your-hf-username>/<your-repo-name> \ # repository to save trajectories
+    use_wandb=true
 ```
 
-Results are automatically uploaded to the `trajectories` repository on HuggingFace.
+Results are automatically uploaded to the provided trajectories repository on HuggingFace.
 
-### Running Specific Agents
+For all configuration options, including different agents and llms, see [conf](conf) directory with Hydra configs.
 
-Use Hydra to configure and run specific agents:
+If you want to run the pipeline only for evaluation, you can use the following command:
 
 ```bash
-cd env_setup_utils
-
-# Run JVM environment setup
-poetry run python scripts/full_pipeline.py -cn jvm
-
-# Run Python environment setup
-poetry run python scripts/full_pipeline.py -cn python
+uv run envbench -cn python-bash skip_inference=true skip_processing=true run_name<your-run-name>
 ```
 
-For all configuration options, see [conf/defaults.yaml](conf/defaults.yaml).
-
-## Documentation
-
-For detailed documentation on each component:
-
-- [Data Collection](data_collection/README.md)
-- [Environment Setup Utils](env_setup_utils/README.md)
-- [Evaluation](evaluation/README.md)
-- [Inference](inference/README.md)
+Alternatively, take a look at the [evaluation/main.py](evaluation/main.py) file for more details on how to run the evaluation step.
 
 ## Implementation Details
 
 - [Agents and Prompts](inference/src/agents)
-- [Dockerfiles](env_setup_utils/scripts)
+- [Dockerfiles](dockerfiles)
 - [Deterministic and Evaluation Scripts](evaluation/scripts)
 
-## Downloads
-
-### Data
+## Artifacts
 - [Dataset](https://huggingface.co/datasets/JetBrains-Research/EnvBench)
-- [Trajectories](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories)
+- [Trajectories from the paper](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories)
 
 ## Citation
 
