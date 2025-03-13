@@ -8,13 +8,13 @@
 
 ## 🔥 What's This?
 
-EnvBench is a comprehensive benchmark for **automating development environment setup** - an important task in software engineering. We have collected the largest dataset to date for this task and introduced a robust framework for developing and evaluating LLM-based agents that tackle environment configuration challenges.
+EnvBench is a comprehensive benchmark for **automating development environment setup** - an important task in software engineering. We have collected the largest dataset to date for this task and introduced a robust framework for developing and evaluating LLM-based agents that tackle environment setup challenges.
 
 Our benchmark includes:
 - 📊 **994 repositories**: 329 Python and 665 JVM-based (Java, Kotlin) projects
 - 🧪 **Genuine configuration challenges**: Carefully selected repositories that cannot be configured with simple deterministic scripts
-- 📈 **Automatic evaluation metrics**: Static analysis for missing imports in Python and compilation checks for JVM languages
-- 🤖 **Evaluation of multiple approaches**: Zero-shot baselines and agentic workflows tested with GPT-4o and GPT-4o-mini
+- 📈 **Evaluation metrics**: Static analysis for missing imports in Python and compilation checks for JVM languages
+- 🤖 **Baselines**: Zero-shot baselines and agentic workflows tested with GPT-4o and GPT-4o-mini
 
 Current state-of-the-art approaches achieve success rates of **6.69%** for Python and **29.47%** for JVM repositories, demonstrating that EnvBench presents significant challenges for existing methods and provides ample opportunity for future research.
 
