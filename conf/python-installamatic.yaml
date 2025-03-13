@@ -1,20 +1,11 @@
 defaults:
-  - base
+  - python-bash
   - _self_
 
-# Repeats defaults, but for stability
-
-tag: oss/python
+tag: oss/python-installamatic
 
 inference:
   agent:
     agent_type: installamatic
     toolkit: installamatic
-  data_source:
-    hf:
-      split: python_baseline_failure
-  docker:
-    image: ghcr.io/jetbrains-research/envbench-python:latest
-
-evaluation:
-  language: python
+    language: python

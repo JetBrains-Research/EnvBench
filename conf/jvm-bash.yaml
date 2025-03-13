@@ -2,7 +2,7 @@ defaults:
   - base
   - _self_
 
-tag: oss/jvm
+tag: oss/jvm-bash
 
 inference:
   agent:

@@ -8,7 +8,7 @@ agent:
     temperature: 0
 
   instruction_provider:
-    _target_: src.context_providers.build_instructions.EmptyEnvSetupInstructionProvider
+    _target_: inference.src.context_providers.build_instructions.EmptyEnvSetupInstructionProvider
 
   max_iterations: 30
   language: python

@@ -8,7 +8,7 @@
 
 ## 🔥 What's This?
 
-EnvBench is a comprehensive benchmark for **automating development environment setup** - an important task in software engineering. We have collected the largest dataset to date for this task and introduced a robust framework for developing and evaluating LLM-based agents that tackle environment setup challenges.
+EnvBench is a comprehensive benchmark for **automating environment setup** - an important task in software engineering. We have collected the largest dataset to date for this task and introduced a robust framework for developing and evaluating LLM-based agents that tackle environment setup challenges.
 
 Our benchmark includes:
 - 📊 **994 repositories**: 329 Python and 665 JVM-based (Java, Kotlin) projects
@@ -55,7 +55,7 @@ Execute the full pipeline (inference and evaluation):
 uv run envbench -cn python-bash traj_repo_id=<your-hf-username>/<your-repo-name>
 ```
 
-Results are automatically uploaded to your specified HuggingFace repository.
+Results are automatically uploaded to your specified HuggingFace repository. Look at the [EnvBench-trajectories](https://huggingface.co/datasets/JetBrains-Research/EnvBench-trajectories/tree/main) dataset for the trajectories. Evaluation results are saved in the `results.jsonl` file.
 
 #### 🎛️ Advanced Configuration
 

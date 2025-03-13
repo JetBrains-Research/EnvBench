@@ -1,10 +1,9 @@
 defaults:
-  - python
+  - python-bash
   - _self_
 
-tag: oss/python-procedural
+tag: oss/python-zeroshot
 
 inference:
   agent:
     agent_type: procedural-python
-

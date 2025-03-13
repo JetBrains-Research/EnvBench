@@ -1,18 +1,11 @@
 defaults:
-  - base
+  - jvm-bash
   - _self_
 
-tag: oss/jvm
+tag: oss/jvm-installamatic
 
 inference:
   agent:
     agent_type: installamatic
     toolkit: installamatic
-  data_source:
-    hf:
-      split: jvm_baseline_failure
-  docker:
-    image: ghcr.io/jetbrains-research/envbench-jvm:latest
-
-evaluation:
-  language: jvm
+    language: jvm

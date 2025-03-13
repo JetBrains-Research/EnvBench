@@ -1,8 +1,8 @@
 defaults:
-  - jvm
+  - jvm-bash
   - _self_
 
-tag: oss/jvm-procedural
+tag: oss/jvm-zeroshot
 
 inference:
   agent:

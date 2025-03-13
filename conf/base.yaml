@@ -34,7 +34,7 @@ inference:
       model: gpt-4o-mini-2024-07-18
       temperature: 0
     instruction_provider:
-      _target_: src.context_providers.build_instructions.EmptyEnvSetupInstructionProvider
+      _target_: inference.src.context_providers.build_instructions.EmptyEnvSetupInstructionProvider
     max_iterations: 30
   data_source:
     type: hf

@@ -4,7 +4,7 @@ defaults:
 
 # Repeats defaults, but for stability
 
-tag: oss/python
+tag: oss/python-bash
 
 inference:
   agent:
