@@ -6,7 +6,8 @@ tag: oss/jvm
 
 inference:
   agent:
-    agent_type: jvm
+    agent_type: installamatic
+    toolkit: installamatic
   data_source:
     hf:
       split: jvm_baseline_failure

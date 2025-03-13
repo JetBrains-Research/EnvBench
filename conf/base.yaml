@@ -76,7 +76,6 @@ scripts_processing:
 evaluation:
   do_dry_run: false
   language: python
-  # language: jvm
   eval_tool: opensource
   input:
     use_scripts: true
