@@ -247,6 +247,9 @@ def create_summary_table(artifacts: list[tuple[str, str, str]]) -> Table:
 
     return table
 
+def resolve_cfg(cfg):
+    return OmegaConf.create(OmegaConf.to_object(cfg))  # hack
+
 
 @hydra.main(version_base=None, config_path="conf", config_name="base")
 def main(cfg: DictConfig) -> None:
@@ -302,7 +305,7 @@ def main(cfg: DictConfig) -> None:
             console.print(create_step_header("Inference", 1, "blue"))
             run_command_with_progress(
                 run_inference,
-                (cfg.inference,),
+                (resolve_cfg(cfg.inference),),
                 "Running inference...",
                 progress,
                 style="blue",
@@ -369,7 +372,7 @@ def main(cfg: DictConfig) -> None:
             console.print(create_step_header("Evaluation", 3, "yellow"))
             run_command_with_progress(
                 run_evaluation,
-                (cfg.evaluation,),
+                (resolve_cfg(cfg.evaluation),),
                 "Running evaluation...",
                 progress,
                 style="yellow",
