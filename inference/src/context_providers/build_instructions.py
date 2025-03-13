@@ -1,8 +1,9 @@
-import logging
 from abc import ABC, abstractmethod
+import logging
 from typing import List, Optional, Set
 
 from datasets import load_dataset  # type: ignore[import-untyped]
+
 from env_setup_utils.markdown import extract_headings_with_keywords
 
 

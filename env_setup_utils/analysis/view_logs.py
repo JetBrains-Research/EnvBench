@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 
 import argparse
+from collections import Counter
 import json
 import os
 import re
-import webbrowser
-from collections import Counter
 from typing import Any, Dict, List, Optional, Tuple
 from typing import Counter as CounterType
+import webbrowser
 
-import plotly.graph_objects as go
 from flask import Flask, redirect, render_template_string, request, url_for
+import plotly.graph_objects as go
 
-from analysis.utils import get_file_path
+from env_setup_utils.analysis.utils import get_file_path
 
 app = Flask(__name__)
 

@@ -1,18 +1,16 @@
+import asyncio
+from collections import deque
+from dataclasses import dataclass
 import logging
 import os
+from pathlib import Path
 import queue
-import re
 import subprocess
 import threading
 import time
-from collections import deque
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import hydra
-import wandb
-import yaml
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
 from rich.align import Align
@@ -27,16 +25,18 @@ from rich.table import Table
 
 # Configure rich traceback for better error display
 from rich.traceback import install
+import wandb
 
-from analysis.scripts_viewer import generate_scripts_html_from_hf
-from analysis.traj_viewer import generate_trajectories_html_from_hf
-from analysis.view_logs import generate_logs_html_from_hf
+from env_setup_utils.analysis.scripts_viewer import generate_scripts_html_from_hf
+from env_setup_utils.analysis.traj_viewer import generate_trajectories_html_from_hf
+from env_setup_utils.analysis.view_logs import generate_logs_html_from_hf
+from env_setup_utils.process_trajectories_to_scripts import process_trajectories_to_scripts
+from evaluation.main import main as run_evaluation
+
+# Import inference and evaluation modules
+from inference.main import main as run_inference
 
 install(show_locals=True, width=120, word_wrap=True)
-
-
-# Get the workspace directory (4 levels up from this script)
-WORKSPACE_DIR = Path(__file__).resolve().parents[2]
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(message)s", handlers=[RichHandler(rich_tracebacks=True, markup=True)])
@@ -186,92 +186,35 @@ def stream_subprocess_output(
     progress.remove_task(task_id)
 
 
-def create_config_files(cfg: DictConfig, base_config: dict, file_name: str) -> None:
-    tmp_path = Path(cfg.tmp_dir)
-    tmp_path.mkdir(parents=True, exist_ok=True)
-
-    # Create inference config
-    inference_config = base_config["inference"]
-    with open(tmp_path / f"{file_name}.yaml", "w") as f:
-        yaml.safe_dump(inference_config, f)
-
-    # Create evaluation config
-    evaluation_config = base_config["evaluation"]
-    with open(tmp_path / f"{file_name}_eval.yaml", "w") as f:
-        yaml.safe_dump(evaluation_config, f)
-
-
 def run_command_with_progress(
-    command: str,
+    func: Callable,
+    args: tuple,
     description: str,
     progress: Progress,
     style: str = "blue",
-    data_path: str = None,
-    count_pattern: str = None,
+    data_path: str | None = None,
+    count_pattern: str | None = None,
 ) -> None:
-    progress.console.print(Panel(f"[bold]Running command:[/bold]\n{command}", style=style, box=ROUNDED, padding=(1, 2)))
-
-    env = os.environ.copy()
-    env["DATA_ROOT"] = data_path
-
-    process = subprocess.Popen(
-        command,
-        shell=True,
-        text=True,
-        cwd=WORKSPACE_DIR,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=1,
-        universal_newlines=True,
+    """Run a coroutine function with progress tracking"""
+    progress.console.print(
+        Panel(
+            f"[bold]Running function:[/bold]\n{func.__name__}: {description}", style=style, box=ROUNDED, padding=(1, 2)
+        )
     )
+    if data_path:
+        os.environ["DATA_ROOT"] = data_path
 
     task_id = progress.add_task(f"[{style}]{description}", total=None)
-    count = 0
-    pattern = re.compile(count_pattern, re.IGNORECASE) if count_pattern else None
 
-    def reader(pipe, queue):
-        try:
-            with pipe:
-                for line in iter(pipe.readline, ""):
-                    queue.put(line.strip())
-        finally:
-            queue.put(None)
+    try:
+        res = func(*args)
+        if asyncio.iscoroutine(res):
+            asyncio.run(res)
+    except Exception as e:
+        progress.remove_task(task_id)
+        raise e
 
-    output_queue = queue.Queue()
-    stdout_thread = threading.Thread(target=reader, args=(process.stdout, output_queue))
-    stderr_thread = threading.Thread(target=reader, args=(process.stderr, output_queue))
-    stdout_thread.daemon = True
-    stderr_thread.daemon = True
-    stdout_thread.start()
-    stderr_thread.start()
-
-    while stdout_thread.is_alive() or stderr_thread.is_alive() or not output_queue.empty():
-        try:
-            line = output_queue.get(timeout=0.1)
-            if line is None:
-                continue
-            progress.console.print(escape(line))
-
-            if pattern and pattern.search(line):
-                count += 1
-                progress.update(task_id, description=f"[{style}]{description} (Repositories: {count})")
-
-        except queue.Empty:
-            continue
-
-    process.wait()
     progress.remove_task(task_id)
-
-    if process.returncode != 0:
-        raise RuntimeError(f"Command failed with return code {process.returncode}")
-
-
-def get_relative_config_path(tmp_dir: str, script_path: str) -> str:
-    """Calculate relative path from script to config directory"""
-    tmp_path = Path(tmp_dir)
-    script_path = Path(script_path)
-    return os.path.relpath(tmp_path, script_path.parent)
 
 
 def create_artifact_table(title: str, repo_id: str, artifacts: list[tuple[str, str]], style: str = "blue") -> Table:
@@ -305,7 +248,7 @@ def create_summary_table(artifacts: list[tuple[str, str, str]]) -> Table:
     return table
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="defaults")
+@hydra.main(version_base=None, config_path="conf", config_name="base")
 def main(cfg: DictConfig) -> None:
     console = Console()
     # Track all artifacts for final summary
@@ -319,7 +262,6 @@ def main(cfg: DictConfig) -> None:
         "[bold white]Configuration Details[/bold white]",
         "─" * 50,
         f"[bold]🏷️  Run name:[/bold] {cfg.run_name}",
-        f"[bold]📂 Working directory:[/bold] {WORKSPACE_DIR}",
         f"[bold]💾 Data path:[/bold] {cfg.data_path}",
         "[bold]🔄 Active Steps:[/bold] "
         + " ".join(
@@ -338,13 +280,8 @@ def main(cfg: DictConfig) -> None:
     console.print(Panel("\n".join(config_text), box=ROUNDED, style="cyan", padding=(1, 2)))
     console.print(Rule(style="bright_black"))
 
-    file_name = cfg.file_name.replace("/", "__")
-
     # Load base configuration
-    base_config = OmegaConf.to_container(cfg, resolve=True)
-
-    # Create separate config files
-    create_config_files(cfg, base_config, file_name)
+    base_config: DictConfig = OmegaConf.to_container(cfg, resolve=True)  # type: ignore
 
     with Progress(
         SpinnerColumn(),
@@ -353,10 +290,6 @@ def main(cfg: DictConfig) -> None:
         TimeElapsedColumn(),
         console=console,
     ) as progress:
-        # Calculate relative paths for each script
-        inference_config_path = get_relative_config_path(cfg.tmp_dir, "inference/run_inference.py")
-        eval_config_path = get_relative_config_path(cfg.tmp_dir, "evaluation/main.py")
-
         # Step 1: Run Inference
         if not cfg.skip_inference:
             if cfg.use_wandb:
@@ -368,7 +301,8 @@ def main(cfg: DictConfig) -> None:
                 )
             console.print(create_step_header("Inference", 1, "blue"))
             run_command_with_progress(
-                f"poetry -C inference run python inference/run_inference.py --config-path {inference_config_path} --config-name {file_name}",
+                run_inference,
+                (cfg.inference,),
                 "Running inference...",
                 progress,
                 style="blue",
@@ -399,7 +333,11 @@ def main(cfg: DictConfig) -> None:
                 )
             console.print(create_step_header("Processing", 2, "green"))
             run_command_with_progress(
-                f"poetry -C env_setup_utils run python env_setup_utils/env_setup_utils/process_trajectories_to_scripts.py --input-trajectories-dir {cfg.run_name}",
+                process_trajectories_to_scripts,
+                (
+                    base_config["inference"]["hf"]["repo_id"],
+                    cfg.run_name,
+                ),
                 "Processing trajectories...",
                 progress,
                 style="green",
@@ -430,7 +368,8 @@ def main(cfg: DictConfig) -> None:
                 )
             console.print(create_step_header("Evaluation", 3, "yellow"))
             run_command_with_progress(
-                f"poetry -C evaluation run python evaluation/main.py --config-path {eval_config_path} --config-name {file_name}_eval",
+                run_evaluation,
+                (cfg.evaluation,),
                 "Running evaluation...",
                 progress,
                 style="yellow",

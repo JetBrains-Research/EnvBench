@@ -7,8 +7,7 @@ PYTHON_CONTEXT_COMMANDS = [
     "for f in setup.py pyproject.toml setup.cfg tox.ini; do "
     'if [ -f "$f" ]; then echo -e "\\n=== $f ==="; cat "$f"; fi; done',
     # Requirements files - direct read
-    "for f in requirements.txt requirements/*.txt; do "
-    'if [ -f "$f" ]; then echo -e "\\n=== $f ==="; cat "$f"; fi; done',
+    'for f in requirements.txt requirements/*.txt; do if [ -f "$f" ]; then echo -e "\\n=== $f ==="; cat "$f"; fi; done',
     # Documentation - direct read
     "for f in README.md INSTALL.md SETUP.md docs/INSTALL.md docs/SETUP.md; do "
     'if [ -f "$f" ]; then echo -e "\\n=== $f ==="; cat "$f"; fi; done',
@@ -27,7 +26,7 @@ PYTHON_CONTEXT_COMMANDS = [
     # Python setup instructions in docs
     'find . -type f -name "*.md" -exec grep -i "python\|pip\|requirements\|virtualenv\|venv" {} \\;',
     # Additional Python files that might contain dependencies
-    'find . -maxdepth 3 -type f -name "__init__.py" | ' 'while read f; do echo -e "\\n=== $f ==="; cat "$f"; done',
+    'find . -maxdepth 3 -type f -name "__init__.py" | while read f; do echo -e "\\n=== $f ==="; cat "$f"; done',
 ]
 
 JVM_CONTEXT_COMMANDS = [
@@ -55,7 +54,7 @@ JVM_CONTEXT_COMMANDS = [
     # Java setup instructions in docs
     'find . -type f -name "*.md" -exec grep -i "java\|jdk\|maven\|gradle\|build" {} \\;',
     # Additional build files that might be important
-    'find . -maxdepth 3 -type f -name "*.gradle" | ' 'while read f; do echo -e "\\n=== $f ==="; cat "$f"; done',
+    'find . -maxdepth 3 -type f -name "*.gradle" | while read f; do echo -e "\\n=== $f ==="; cat "$f"; done',
     # Maven wrapper and Gradle wrapper configs
     "for f in .mvn/wrapper/maven-wrapper.properties gradle/wrapper/gradle-wrapper.properties; do "
     'if [ -f "$f" ]; then echo -e "\\n=== $f ==="; cat "$f"; fi; done',

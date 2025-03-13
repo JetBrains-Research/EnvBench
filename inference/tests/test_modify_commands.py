@@ -1,4 +1,4 @@
-from src.utils.modify_commands import add_flag_to_command
+from inference.src.utils.modify_commands import add_flag_to_command
 
 
 def test_modify_pyenv_command():

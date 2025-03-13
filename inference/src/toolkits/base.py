@@ -5,7 +5,7 @@ from typing import List, Tuple
 from langchain_core.tools import BaseTool, BaseToolkit
 from pydantic import Field
 
-from src.async_bash_executor import AsyncBashExecutor
+from inference.src.async_bash_executor import AsyncBashExecutor
 
 
 class BaseEnvSetupToolkit(BaseToolkit, abc.ABC):

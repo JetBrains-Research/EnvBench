@@ -1,10 +1,10 @@
 from enum import Enum
 from typing import Dict, Optional
 
-from src.async_bash_executor import AsyncBashExecutor
-from src.toolkits import BashTerminalToolkit, JVMBashTerminalToolkit, PythonBashTerminalToolkit
-from src.toolkits.base import BaseEnvSetupToolkit
-from src.toolkits.installamatic import InstallamaticToolkit
+from inference.src.async_bash_executor import AsyncBashExecutor
+from inference.src.toolkits import BashTerminalToolkit, JVMBashTerminalToolkit, PythonBashTerminalToolkit
+from inference.src.toolkits.base import BaseEnvSetupToolkit
+from inference.src.toolkits.installamatic import InstallamaticToolkit
 
 
 class EnvSetupToolkit(Enum):

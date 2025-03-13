@@ -4,7 +4,7 @@ from typing import List
 from langchain_core.messages import BaseMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 
-from src.agents.installamatic.state_schema import (
+from inference.src.agents.installamatic.state_schema import (
     InstallamaticBuildConfigurable,
     InstallamaticBuildState,
     InstallamaticSearchConfigurable,
@@ -12,8 +12,8 @@ from src.agents.installamatic.state_schema import (
 )
 
 # Load Dockerfiles
-python_dockerfile_path = Path(__file__).parents[4] / "env_setup_utils" / "scripts" / "python.Dockerfile"
-jvm_dockerfile_path = Path(__file__).parents[4] / "env_setup_utils" / "scripts" / "jvm.Dockerfile"
+python_dockerfile_path = Path(__file__).parents[4] / "dockerfiles" / "python.Dockerfile"
+jvm_dockerfile_path = Path(__file__).parents[4] / "dockerfiles" / "jvm.Dockerfile"
 python_dockerfile = python_dockerfile_path.read_text()
 jvm_dockerfile = jvm_dockerfile_path.read_text()
 

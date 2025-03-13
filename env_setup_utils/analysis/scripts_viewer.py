@@ -3,12 +3,12 @@
 import argparse
 import json
 import os
-import webbrowser
 from typing import Any, Dict, List
+import webbrowser
 
 from flask import Flask, redirect, render_template_string, url_for
 
-from analysis.utils import get_file_path
+from env_setup_utils.analysis.utils import get_file_path
 
 app = Flask(__name__)
 

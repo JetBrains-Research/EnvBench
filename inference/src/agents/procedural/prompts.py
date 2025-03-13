@@ -5,8 +5,8 @@ from pathlib import Path
 from langchain_core.prompts import ChatPromptTemplate
 
 # Load Dockerfiles
-python_dockerfile_path = Path(__file__).parents[4] / "env_setup_utils" / "scripts" / "python.Dockerfile"
-jvm_dockerfile_path = Path(__file__).parents[4] / "env_setup_utils" / "scripts" / "jvm.Dockerfile"
+python_dockerfile_path = Path(__file__).parents[4] / "dockerfiles" / "python.Dockerfile"
+jvm_dockerfile_path = Path(__file__).parents[4] / "dockerfiles" / "jvm.Dockerfile"
 python_dockerfile = python_dockerfile_path.read_text()
 jvm_dockerfile = jvm_dockerfile_path.read_text()
 # Load baseline scripts

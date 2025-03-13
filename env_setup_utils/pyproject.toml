@@ -1,44 +1,45 @@
-[tool.poetry]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
 name = "env-setup-utils"
 version = "0.1.3"
 description = "Various utilities from Environment Setup project."
 authors = [
-    "Alexandra Eliseeva <alexandra.eliseeva@jetbrains.com>",
-    "Alexander Kovrigin <alexander.kovrigin@jetbrains.com>",
+    { name = "Alexandra Eliseeva", email = "alexandra.eliseeva@jetbrains.com" },
+    { name = "Alexander Kovrigin", email = "alexander.kovrigin@jetbrains.com" },
 ]
-packages = [
-    { include = "env_setup_utils" },
-    { include = "env_setup_utils/py.typed" },
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "mistune>=3.0.2",
+    "beautifulsoup4>=4.12.3",
+    "markdownify>=0.12.1",
+    "jsonlines>=4.0.0",
+    "huggingface-hub>=0.24.7",
+    "wandb>=0.19.5",
+    "hydra-core>=1.3.2",
+    "rich>=13.9.4",
+    "python-dotenv>=1.0.1",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-mistune = "^3.0.2"
-beautifulsoup4 = "^4.12.3"
-markdownify = "^0.12.1"
-jsonlines = "^4.0.0"
-huggingface-hub = "^0.24.7"
-wandb = "^0.19.5"
-hydra-core = "^1.3.2"
-rich = "^13.9.4"
-python-dotenv = "^1.0.1"
+[project.optional-dependencies]
+analysis = [
+    "wandb>=0.18.0",
+    "plotly>=5.18.0",
+    "flask>=3.0.0",
+    "pandas>=2.2.3",
+]
+dev = [
+    "mypy>=1.5.0",
+    "pytest>=7.4.0",
+    "ruff>=0.3.2",
+    "pyright>=1.1.367",
+    "isort>=5.13.2",
+]
 
-[tool.poetry.group.analysis]
-optional = true
-
-[tool.poetry.group.analysis.dependencies]
-wandb = ">=0.18.0"
-plotly = "^5.18.0"
-flask = "^3.0.0"
-pandas = "^2.2.3"
-
-
-[tool.poetry.group.dev.dependencies]
-mypy = "^1.5.0"
-pytest = "^7.4.0"
-ruff = "^0.3.2"
-pyright = "^1.1.367"
-isort = "^5.13.2"
+[tool.hatch.build.targets.wheel]
+packages = ["env_setup_utils"]
 
 [tool.ruff]
 line-length = 120
@@ -56,9 +57,5 @@ order_by_type = true
 python_version = "3.10"
 
 [[tool.mypy.overrides]]
-module = []
+module = ["*"]
 ignore_missing_imports = true
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

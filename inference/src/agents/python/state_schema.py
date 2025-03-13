@@ -4,8 +4,8 @@ from langchain_core.messages import BaseMessage
 from langgraph.graph import add_messages
 from langgraph.managed import IsLastStep, RemainingSteps
 
-from src.async_bash_executor import CommandExecutionResult
-from src.utils.messages_info import MessageInfo
+from inference.src.async_bash_executor import CommandExecutionResult
+from inference.src.utils.messages_info import MessageInfo
 
 
 class EnvSetupPythonState(TypedDict, total=False):

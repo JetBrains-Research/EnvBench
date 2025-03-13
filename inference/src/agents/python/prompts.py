@@ -4,9 +4,9 @@ from typing import Sequence
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
-from src.agents.python.state_schema import EnvSetupPythonState
+from inference.src.agents.python.state_schema import EnvSetupPythonState
 
-dockerfile_path = Path(__file__).parents[4] / "env_setup_utils" / "scripts" / "python.Dockerfile"
+dockerfile_path = Path(__file__).parents[4] / "dockerfiles" / "python.Dockerfile"
 dockerfile = dockerfile_path.read_text()
 
 system_prompt = dedent(
@@ -83,7 +83,7 @@ def get_env_setup_python_prompt(state: EnvSetupPythonState) -> Sequence[BaseMess
         There are installation instructions for the current project that might be helpful to complete your task:
 
         ```
-        {state['build_instructions']}
+        {state["build_instructions"]}
         ```
         """)
         )

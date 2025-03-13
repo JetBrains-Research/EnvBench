@@ -34,13 +34,13 @@ class DockerConfig(BaseModel):
     @validator("env_vars", pre=True)
     def set_env_vars(cls, env_vars: Dict[str, Optional[str]]) -> Dict[str, str]:
         str_env_vars: Dict[str, str] = {key: value for key, value in env_vars.items() if isinstance(value, str)}
-        assert set(str_env_vars.keys()) == set(
-            env_vars.keys()
-        ), f"Some variables have non-string values: {set(env_vars.keys()) - set(str_env_vars.keys())}"
+        assert set(str_env_vars.keys()) == set(env_vars.keys()), (
+            f"Some variables have non-string values: {set(env_vars.keys()) - set(str_env_vars.keys())}"
+        )
         return str_env_vars
 
     @validator("output_dir", pre=True)
     def set_output_dir(cls, output_dir: str) -> str:
         if output_dir.startswith("~"):
-            output_dir = f"/{os.path.expanduser('~')}/{output_dir[len('~/'):]}"
+            output_dir = f"/{os.path.expanduser('~')}/{output_dir[len('~/') :]}"
         return output_dir

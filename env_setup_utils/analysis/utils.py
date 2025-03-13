@@ -1,12 +1,12 @@
 """Utility functions for evaluation scripts."""
 
-import tempfile
 from pathlib import Path
+import tempfile
 from typing import Optional, cast
 
 from huggingface_hub import HfFileSystem, hf_hub_download
 
-from analysis.cache_manager import CacheManager
+from env_setup_utils.analysis.cache_manager import CacheManager
 
 DEFAULT_REPO = "JetBrains-Research/EnvBench-trajectories"
 DEFAULT_FILES = {"scripts_viewer": "scripts.jsonl", "view_logs": "results.jsonl"}

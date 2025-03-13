@@ -2,11 +2,11 @@ import asyncio
 import os
 from textwrap import dedent
 
-import pytest
 from dotenv import load_dotenv
-from env_setup_utils.repo_downloader import RepoDownloader
+import pytest
 
-from src.async_bash_executor import AsyncBashExecutor
+from env_setup_utils.repo_downloader import RepoDownloader
+from inference.src.async_bash_executor import AsyncBashExecutor
 
 load_dotenv()
 
@@ -31,7 +31,7 @@ async def test_pyenv_commands():
         language="python",
     )
 
-    from src.toolkits import PythonBashTerminalToolkit
+    from inference.src.toolkits import PythonBashTerminalToolkit
 
     toolkit = await PythonBashTerminalToolkit.create(bash_executor=bash_executor)
     await toolkit.execute_bash_command(command="pyenv shell 3.11.7", reason="to set Python version to 3.11.7")
@@ -571,7 +571,7 @@ async def test_jvm_bash_terminal_toolkit(timeout=60):
         language="jvm",
     )
 
-    from src.toolkits.bash_terminal_jvm import JVMBashTerminalToolkit
+    from inference.src.toolkits.bash_terminal_jvm import JVMBashTerminalToolkit
 
     toolkit = await JVMBashTerminalToolkit.create(bash_executor=bash_executor)
 

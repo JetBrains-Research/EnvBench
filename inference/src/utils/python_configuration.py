@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import tomllib  # type: ignore[import-not-found]
 
-from src.agents.python_baseline.constants import BUILD_BACKEND_TO_DM_MAP
+from inference.src.agents.python_baseline.constants import BUILD_BACKEND_TO_DM_MAP
 
 
 def get_dm_from_pyproject_toml(file_contents: str) -> Optional[str]:

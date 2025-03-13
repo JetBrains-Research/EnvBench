@@ -3,11 +3,11 @@ import multiprocessing
 import os
 import tarfile
 
+from dotenv import load_dotenv
 import git
 import hydra
-import jsonlines
-from dotenv import load_dotenv
 from hydra.utils import to_absolute_path
+import jsonlines
 from omegaconf import DictConfig, OmegaConf
 from pydantic import BaseModel
 

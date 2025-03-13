@@ -5,9 +5,9 @@ import os
 import tempfile
 from typing import Any, Dict, List
 
-import jsonlines
 from dotenv import load_dotenv
 from huggingface_hub import hf_hub_download, list_repo_tree, upload_file  # type: ignore[import-untyped]
+import jsonlines
 from tqdm import tqdm  # type: ignore[import-untyped]
 
 load_dotenv()
@@ -62,27 +62,16 @@ def parse_script_from_trajectory(trajectory: List[Dict[str, Any]]) -> str:
     return "\n".join(format_command(command) for command in commands)
 
 
-if __name__ == "__main__":
-    TRAJECTORIES_DATASET = "JetBrains-Research/EnvBench-trajectories"
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--input-trajectories-dir",
-        required=True,
-        type=str,
-        help="The directory in the HF trajectories dataset that contains the trajectories to be processed.",
-    )
-    args = parser.parse_args()
-
+def process_trajectories_to_scripts(trajectories_dataset: str, input_trajectories_dir: str):
     scripts = []
     with tempfile.TemporaryDirectory() as temp_dir:
         for trajectory_file in tqdm(
             list_repo_tree(
-                TRAJECTORIES_DATASET, os.path.join(args.input_trajectories_dir, "trajectories"), repo_type="dataset"
+                trajectories_dataset, os.path.join(input_trajectories_dir, "trajectories"), repo_type="dataset"
             )
         ):
             file_path = hf_hub_download(
-                repo_id=TRAJECTORIES_DATASET,
+                repo_id=trajectories_dataset,
                 filename=trajectory_file.path,
                 repo_type="dataset",
                 local_dir=temp_dir,
@@ -103,8 +92,30 @@ if __name__ == "__main__":
             writer.write_all(scripts)
 
         upload_file(
-            path_in_repo=os.path.join(args.input_trajectories_dir, "scripts.jsonl"),
+            path_in_repo=os.path.join(input_trajectories_dir, "scripts.jsonl"),
             path_or_fileobj=f"{temp_dir}/scripts.jsonl",
-            repo_id=TRAJECTORIES_DATASET,
+            repo_id=trajectories_dataset,
             repo_type="dataset",
         )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--input-trajectories-dir",
+        required=True,
+        type=str,
+        help="The directory in the HF trajectories dataset that contains the trajectories to be processed.",
+    )
+    parser.add_argument(
+        "--traj_repo_id",
+        default="JetBrains-Research/EnvBench-trajectories",
+        type=str,
+        help="The repository ID of the trajectories dataset.",
+    )
+    args = parser.parse_args()
+
+    process_trajectories_to_scripts(
+        args.traj_repo_id,
+        args.input_trajectories_dir,
+    )

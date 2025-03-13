@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
+from collections import Counter
 import json
 import logging
-from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 from typing import Counter as CounterType

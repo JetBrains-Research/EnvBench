@@ -6,7 +6,7 @@ from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
 from langgraph.graph import add_messages
 
-from src.utils.messages_info import MessageInfo
+from inference.src.utils.messages_info import MessageInfo
 
 
 # ====================

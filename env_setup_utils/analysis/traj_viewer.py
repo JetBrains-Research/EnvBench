@@ -3,14 +3,14 @@
 import argparse
 import json
 import os
-import re
-import webbrowser
 from pathlib import Path
+import re
 from typing import Any, Dict, List
+import webbrowser
 
 from flask import Flask, redirect, render_template_string, url_for
 
-from analysis.utils import get_dir_path
+from env_setup_utils.analysis.utils import get_dir_path
 
 # Model pricing per 1M tokens (placeholder values)
 MODEL_PRICING = {

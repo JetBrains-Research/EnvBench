@@ -6,5 +6,3 @@ lint:
 	ruff check --config pyproject.toml
 	mypy --config-file pyproject.toml .
 	pyright
-test:
-	pytest

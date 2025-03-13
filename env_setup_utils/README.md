@@ -50,9 +50,9 @@ poetry install
 
 A utility package for Environment Setup. Contains:
 
-* script for processing agent trajectories from [`inference`](../inference) into scripts: [`process_trajectories_to_scripts.py`](env_setup_utils/process_trajectories_to_scripts.py)
-* script for parsing Markdown documents based on headings: [`markdown/parse_md_headings.py`](env_setup_utils/markdown/parse_md_headings.py)
-* classes for iterating over either local data or data stored on HuggingFace: [`data_sources`](env_setup_utils/data_sources)
-* class for downloading repositories either from HuggingFace or GitHub: [`repo_downloader.py`](env_setup_utils/repo_downloader.py)
-* script for vizualizing agent trajectories from [`inference`](../inference) as HTML: [`traj2html.py`](env_setup_utils/traj2html.py)
-* script for summarizing/analyzing agent trajectories from [`inference`](../inference): [`log_analyzer.py`](env_setup_utils/log_analyzer.py)
+* script for processing agent trajectories from [`inference`](../inference) into scripts: [`process_trajectories_to_scripts.py`](process_trajectories_to_scripts.py)
+* script for parsing Markdown documents based on headings: [`markdown/parse_md_headings.py`](markdown/parse_md_headings.py)
+* classes for iterating over either local data or data stored on HuggingFace: [`data_sources`](data_sources)
+* class for downloading repositories either from HuggingFace or GitHub: [`repo_downloader.py`](repo_downloader.py)
+* script for vizualizing agent trajectories from [`inference`](../inference) as HTML: [`traj2html.py`](traj2html.py)
+* script for summarizing/analyzing agent trajectories from [`inference`](../inference): [`log_analyzer.py`](log_analyzer.py)

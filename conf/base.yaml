@@ -3,8 +3,8 @@ defaults:
  - _self_
 
 # Data paths
-tmp_dir: ${oc.env:TEMP_DIR,/tmp/envsetup}  # Default to /tmp/envsetup if TEMP_DIR not set
-data_path: ${oc.env:DATA_ROOT,/mnt/data}
+tmp_dir: ${oc.env:TEMP_DIR,${hydra:runtime.cwd}/tmp}
+data_path: ${oc.env:DATA_ROOT,${hydra:runtime.cwd}/data}
 
 # Run configuration
 tag: oss/envsetup-python  # Static tag

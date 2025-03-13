@@ -6,7 +6,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from .state_schema import EnvSetupJVMState
 
-dockerfile_path = Path(__file__).parents[4] / "env_setup_utils" / "scripts" / "jvm.Dockerfile"
+dockerfile_path = Path(__file__).parents[4] / "dockerfiles" / "jvm.Dockerfile"
 dockerfile = dockerfile_path.read_text()
 
 system_prompt = dedent(
@@ -77,7 +77,7 @@ def get_env_setup_jvm_prompt(state: EnvSetupJVMState) -> Sequence[BaseMessage]:
             dedent(f"""
                     Here are specific build instructions that might be useful for the build process:
                     ```
-                    {state['build_instructions']}
+                    {state["build_instructions"]}
                     ```
                     """)
         )

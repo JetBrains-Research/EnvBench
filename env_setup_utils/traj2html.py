@@ -1,7 +1,7 @@
 import argparse
 import json
-import webbrowser
 from pathlib import Path
+import webbrowser
 
 
 # Function to convert message_content type to distinct bootstrap colors
@@ -152,7 +152,7 @@ def convert_jsonl_to_html(jsonl_path):
                             f"<p><strong>Tool Args:</strong> {json.dumps(tool_call['args'], indent=2)}</p>"
                         )
                         chat_content += f"""
-                        <div class="message" style="{message_direction_to_bg('s2e')}">
+                        <div class="message" style="{message_direction_to_bg("s2e")}">
                             <div>
                                 <span class="badge badge-info">TOOL_CALL</span>
                                 <span class="agent">Agent</span>
@@ -167,7 +167,7 @@ def convert_jsonl_to_html(jsonl_path):
                 if message_content.get("content"):
                     formatted_message = f"<p>{message_content['content']}</p>"
                     chat_content += f"""
-                    <div class="message" style="{message_direction_to_bg('s2e')}">
+                    <div class="message" style="{message_direction_to_bg("s2e")}">
                         <div>
                             <span class="badge badge-primary">CONTENT</span>
                             <span class="agent">Agent</span>
@@ -183,7 +183,7 @@ def convert_jsonl_to_html(jsonl_path):
                 message_content = message["message_content"]
                 formatted_message = f"<div class='code-block'><pre>{message_content.get('content', '')}</pre></div>"
                 chat_content += f"""
-                <div class="message" style="{message_direction_to_bg('e2s')}">
+                <div class="message" style="{message_direction_to_bg("e2s")}">
                     <div>
                         <span class="badge badge-warning">TOOL_RESPONSE</span>
                         <span class="agent">Tools</span>
@@ -202,7 +202,7 @@ def convert_jsonl_to_html(jsonl_path):
                 formatted_message += f"{status} {cmd['command']} (exit: {cmd['exit_code']})\n"
             formatted_message += "</code></pre>"
             chat_content += f"""
-            <div class="message" style="{message_direction_to_bg('e2s')}">
+            <div class="message" style="{message_direction_to_bg("e2s")}">
                 <div>
                     <span class="badge badge-info">COMMANDS_HISTORY</span>
                     <span class="agent">System</span>

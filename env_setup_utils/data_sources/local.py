@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterator
 
 import jsonlines
 
-from .base import BaseDataSource
+from env_setup_utils.data_sources.base import BaseDataSource
 
 
 class LocalFileDataSource(BaseDataSource):

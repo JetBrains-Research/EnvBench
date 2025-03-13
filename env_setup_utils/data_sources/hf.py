@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from datasets import get_dataset_config_names, load_dataset  # type: ignore[import-untyped, import-not-found]
 
-from .base import BaseDataSource
+from env_setup_utils.data_sources.base import BaseDataSource
 
 
 class HFDataSource(BaseDataSource):

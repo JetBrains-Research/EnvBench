@@ -4,15 +4,15 @@ from typing import Optional, Union
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Extra, validator
 
-from configs.context_provider_config import EnvSetupInstructionProviderConfig
-from configs.instantiatable_config import InstantiatableConfig
-from configs.toolkit_config import EnvSetupToolkit
-from src.agents.base import BaseEnvSetupAgent
-from src.agents.installamatic.agent import InstallamaticAgent
-from src.agents.jvm.agent import EnvSetupJVMAgent
-from src.agents.procedural.agent import EnvSetupProceduralAgent
-from src.agents.python.agent import EnvSetupPythonAgent
-from src.toolkits.base import BaseEnvSetupToolkit
+from inference.configs.context_provider_config import EnvSetupInstructionProviderConfig
+from inference.configs.instantiatable_config import InstantiatableConfig
+from inference.configs.toolkit_config import EnvSetupToolkit
+from inference.src.agents.base import BaseEnvSetupAgent
+from inference.src.agents.installamatic.agent import InstallamaticAgent
+from inference.src.agents.jvm.agent import EnvSetupJVMAgent
+from inference.src.agents.procedural.agent import EnvSetupProceduralAgent
+from inference.src.agents.python.agent import EnvSetupPythonAgent
+from inference.src.toolkits.base import BaseEnvSetupToolkit
 
 
 class ModelConfig(InstantiatableConfig[BaseChatModel], extra=Extra.allow): ...

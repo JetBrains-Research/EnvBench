@@ -3,7 +3,7 @@ from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from langgraph.graph.graph import CompiledGraph
 
-from src.async_bash_executor import CommandExecutionResult
+from inference.src.async_bash_executor import CommandExecutionResult
 
 StateUpdate = TypeVar("StateUpdate")
 GraphState = TypeVar("GraphState")

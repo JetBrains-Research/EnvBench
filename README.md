@@ -60,7 +60,7 @@ poetry run python scripts/full_pipeline.py -cn jvm
 poetry run python scripts/full_pipeline.py -cn python
 ```
 
-For all configuration options, see [conf/defaults.yaml](env_setup_utils/scripts/conf/defaults.yaml).
+For all configuration options, see [conf/defaults.yaml](conf/defaults.yaml).
 
 ## Documentation
 

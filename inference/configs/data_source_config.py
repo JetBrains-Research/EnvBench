@@ -1,7 +1,8 @@
 from typing import List
 
-from env_setup_utils.data_sources import HFDataSource, LocalFileDataSource
 from pydantic import BaseModel
+
+from env_setup_utils.data_sources import HFDataSource, LocalFileDataSource
 
 from .instantiatable_config import InstantiatableConfig
 

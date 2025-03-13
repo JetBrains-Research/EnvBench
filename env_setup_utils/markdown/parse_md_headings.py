@@ -1,9 +1,9 @@
 import re
 from typing import List, Optional, Set, TypedDict
 
-import mistune
 from bs4 import BeautifulSoup  # type: ignore[import-untyped]
 from markdownify import markdownify as md  # type: ignore[import-untyped]
+import mistune
 
 
 class Heading(TypedDict):

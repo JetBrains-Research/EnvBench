@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "EnvBench"
+version = "0.1.0"
+description = "A Benchmark for Automated Environment Setup"
+readme = "README.md"
+requires-python = ">=3.10,<4.0"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Alexandra Eliseeva", email = "alexandra.eliseeva@jetbrains.com" },
+    { name = "Alexander Kovrigin", email = "alexander.kovrigin@jetbrains.com" },
+    { name = "Ilia Kholkin", email = "iluxa.kholkin@gmail.com" },
+]
+dependencies = [
+    "env-setup-utils",
+    "ai-agents-env-setup-data-collection",
+    "ai-agents-env-setup-inference",
+    "ai-agents-env-setup-evaluation",
+]
+
+[project.scripts]
+envbench = "envbench:main"
+
+[tool.hatch.build.targets.wheel]
+packages = []
+
+[tool.hatch.build]
+exclude = [
+    "/.git",
+    "/.github",
+    "/.idea",
+    "/.cadence",
+    "/data",
+    "/tmp"
+]
+
+[tool.uv.workspace]
+members = [
+    ".",
+    "data_collection",
+    "env_setup_utils",
+    "inference",
+    "evaluation",
+]
+
+[tool.uv.sources]
+env-setup-utils = { workspace = true }
+ai-agents-env-setup-data-collection = { workspace = true }
+ai-agents-env-setup-inference = { workspace = true }
+ai-agents-env-setup-evaluation = { workspace = true }
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+order-by-type = true
+
+[tool.isort]
+profile = "black"
+force_sort_within_sections = true
+order_by_type = true
+
+[tool.mypy]
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = ["*"]
+ignore_missing_imports = true 

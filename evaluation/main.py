@@ -1,25 +1,26 @@
+from itertools import repeat
+import json
+import logging
+import os
+from pathlib import Path
 import shutil
 import stat
 import time
 from typing import Optional
 
-import hydra
-import jsonlines
-import requests.exceptions
 from docker import from_env  # type: ignore[import-untyped]
-from docker.errors import DockerException, APIError, ImageNotFound, ContainerError  # type: ignore[import-untyped]
-from huggingface_hub import hf_hub_download, upload_file  # type: ignore[import-untyped]
-from omegaconf import DictConfig
+from docker.errors import APIError, ContainerError, DockerException, ImageNotFound  # type: ignore[import-untyped]
 from dotenv import load_dotenv
-import os
+from huggingface_hub import hf_hub_download, upload_file  # type: ignore[import-untyped]
+import hydra
 from hydra.utils import to_absolute_path
-from tqdm.contrib.concurrent import process_map
+import jsonlines
+from omegaconf import DictConfig
 import pandas as pd
+import requests.exceptions
+from tqdm.contrib.concurrent import process_map
+
 from env_setup_utils.repo_downloader import RepoDownloader
-import json
-from itertools import repeat
-import logging
-from pathlib import Path
 
 
 class ScriptExceptionError(Exception):
@@ -43,21 +44,13 @@ def remove_bad_commands(script: str) -> str:
     res = []
     for line in lines:
         stripped_line = line.strip()
-        if stripped_line.startswith("mvn compile") or stripped_line.startswith(
-            "./mvnw compile"
-        ):
+        if stripped_line.startswith("mvn compile") or stripped_line.startswith("./mvnw compile"):
             continue
-        if stripped_line.startswith("mvn test") or stripped_line.startswith(
-            "./mvnw test"
-        ):
+        if stripped_line.startswith("mvn test") or stripped_line.startswith("./mvnw test"):
             continue
-        if stripped_line.startswith("gradle build") or stripped_line.startswith(
-            "./gradlew build"
-        ):
+        if stripped_line.startswith("gradle build") or stripped_line.startswith("./gradlew build"):
             continue
-        if stripped_line.startswith("gradle test") or stripped_line.startswith(
-            "./gradlew test"
-        ):
+        if stripped_line.startswith("gradle test") or stripped_line.startswith("./gradlew test"):
             continue
         res.append(line)
     return "\n".join(res)
@@ -83,9 +76,7 @@ def run_opensource(
 
     if bootstrap_script is None:
         bootstrap_script = (
-            read_script("python_baseline.sh")
-            if cfg.language == "python"
-            else read_script("jvm_baseline.sh")
+            read_script("python_baseline.sh") if cfg.language == "python" else read_script("jvm_baseline.sh")
         )
         logging.info(f"Using default bootstrap script for {cfg.language}")
 
@@ -111,8 +102,7 @@ def run_opensource(
 
     if cfg.language not in build_script_functions:
         error_msg = (
-            f"Unsupported language: {cfg.language}. "
-            f"Supported languages are: {list(build_script_functions.keys())}"
+            f"Unsupported language: {cfg.language}. Supported languages are: {list(build_script_functions.keys())}"
         )
         logging.error(error_msg)
         raise ValueError(error_msg)
@@ -194,9 +184,7 @@ def run_opensource(
                     build_results = json.load(f)
                     for key in build_results:
                         json_result[key] = build_results[key]
-                    logging.info(
-                        f"Found {json_result.get('issues_count', '??')} issues"
-                    )
+                    logging.info(f"Found {json_result.get('issues_count', '??')} issues")
             else:
                 logging.warning("results.json not found")
         except (json.JSONDecodeError, FileNotFoundError) as e:
@@ -254,9 +242,7 @@ eval_tools = {
 def main(cfg: DictConfig) -> None:
     # Draw the repos names&revisions to run a script on
     if cfg.input.mode == "local":
-        repos = pd.read_json(
-            to_absolute_path(cfg.input.local), orient="records", lines=True
-        )
+        repos = pd.read_json(to_absolute_path(cfg.input.local), orient="records", lines=True)
     elif cfg.input.mode == "hf":
         local_path = hf_hub_download(
             repo_id=cfg.input.hf.repo_id,
@@ -276,31 +262,27 @@ def main(cfg: DictConfig) -> None:
     # repos = repos[repos[repo_name_col].str.startswith("aqlaboratory/openfold")]
     # repos = repos.head(100)
 
-    assert (
-        repo_name_col in repos.columns
-    ), f"The input data is expected to have column {repo_name_col} with repository names, but it doesn't."
-    assert (
-        commit_sha_col in repos.columns
-    ), f"The input data is expected to have column {commit_sha_col} with revisions, but it doesn't."
+    assert repo_name_col in repos.columns, (
+        f"The input data is expected to have column {repo_name_col} with repository names, but it doesn't."
+    )
+    assert commit_sha_col in repos.columns, (
+        f"The input data is expected to have column {commit_sha_col} with revisions, but it doesn't."
+    )
     if cfg.input.use_scripts:
-        assert (
-            script_col in repos.columns
-        ), f"The input data is expected to have column {script_col} with scripts, but it doesn't."
+        assert script_col in repos.columns, (
+            f"The input data is expected to have column {script_col} with scripts, but it doesn't."
+        )
 
     if not cfg.operation.rewrite_results:
         logging.info("Configured not to overwrite existing results.")
         if os.path.exists(os.path.join(cfg.operation.dirs.json_results, "results")):
             processed_repos = []
-            for file in os.listdir(
-                os.path.join(cfg.operation.dirs.json_results, "results")
-            ):
+            for file in os.listdir(os.path.join(cfg.operation.dirs.json_results, "results")):
                 repo_name = file[: -len(".json")].replace("__", "/")
                 processed_repos.append({repo_name_col: repo_name})
             processed_repos_df = pd.DataFrame(processed_repos)
             logging.info(f"Got {len(processed_repos_df)} already processed repos.")
-            repos = repos.loc[
-                ~repos[repo_name_col].isin(processed_repos_df[repo_name_col])
-            ]
+            repos = repos.loc[~repos[repo_name_col].isin(processed_repos_df[repo_name_col])]
             logging.info(f"Got {len(repos)} repos to process.")
     else:
         logging.info(
@@ -322,10 +304,7 @@ def main(cfg: DictConfig) -> None:
 
     # Select evaluation tool
     if cfg.eval_tool not in eval_tools:
-        raise ValueError(
-            f"Unknown evaluation tool: {cfg.eval_tool}. "
-            f"Supported tools are: {list(eval_tools.keys())}"
-        )
+        raise ValueError(f"Unknown evaluation tool: {cfg.eval_tool}. Supported tools are: {list(eval_tools.keys())}")
 
     # Run processes
     func = eval_tools[cfg.eval_tool]
@@ -356,13 +335,9 @@ def main(cfg: DictConfig) -> None:
     )
 
     with jsonlines.open(jsonl_path, "w") as writer:
-        for file in os.listdir(
-            os.path.join(to_absolute_path(cfg.operation.dirs.json_results), "results")
-        ):
+        for file in os.listdir(os.path.join(to_absolute_path(cfg.operation.dirs.json_results), "results")):
             with open(
-                os.path.join(
-                    to_absolute_path(cfg.operation.dirs.json_results), "results", file
-                ),
+                os.path.join(to_absolute_path(cfg.operation.dirs.json_results), "results", file),
                 "r",
             ) as f:
                 json_result = json.load(f)
