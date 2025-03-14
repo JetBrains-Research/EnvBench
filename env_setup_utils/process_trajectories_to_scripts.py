@@ -13,6 +13,35 @@ from tqdm import tqdm  # type: ignore[import-untyped]
 load_dotenv()
 
 
+def parse_installamatic_trajectory(trajectory: List[Dict[str, Any]]) -> str:
+    """
+    Extract the shell script from a trajectory (list of JSON objects) produced
+    by Installamatic. The function looks for entries that contain a 'shell_script'
+    key. If multiple entries are found, it first returns the one from the node
+    'generate_shell_script' (if present), and otherwise returns the last one found.
+
+    Args:
+        trajectory: A list of dictionaries parsed from a jsonlines file.
+
+    Returns:
+        A string containing the shell script.
+
+    Raises:
+        ValueError: If no shell_script is found in any entry.
+    """
+    shell_entries = [entry for entry in trajectory if "shell_script" in entry]
+
+    if not shell_entries:
+        logging.warning("No shell_script found in the trajectory.")
+        return ""
+
+    for entry in shell_entries:
+        if entry.get("node") == "generate_shell_script":
+            return entry["shell_script"]
+
+    return shell_entries[-1]["shell_script"]
+
+
 def parse_script_from_trajectory(trajectory: List[Dict[str, Any]]) -> str:
     """Processes a given trajectory into a final bash script.
 
@@ -80,11 +109,15 @@ def process_trajectories_to_scripts(trajectories_dataset: str, input_trajectorie
             with jsonlines.open(file_path, "r") as reader:
                 trajectory = [line for line in reader]
             repository, revision = os.path.basename(trajectory_file.path[: -len(".jsonl")]).split("@")
+            script = parse_script_from_trajectory(trajectory)
+            if not script:
+                script = parse_installamatic_trajectory(trajectory)
+
             scripts.append(
                 {
                     "repository": repository.replace("__", "/"),
                     "revision": revision,
-                    "script": parse_script_from_trajectory(trajectory),
+                    "script": script,
                 }
             )
 
