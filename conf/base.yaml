@@ -14,7 +14,7 @@ traj_repo_id: JetBrains-Research/EnvBench-trajectories # Trajectories repo on HF
 
 # WandB configuration
 wandb_project: envsetup-oss  # Default wandb project name
-use_wandb: true
+use_wandb: false
 
 # Steps to skip
 skip_inference: false
