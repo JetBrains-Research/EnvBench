@@ -33,6 +33,7 @@ Create a virtual environment and install dependencies:
 uv venv --python 3.12
 source .venv/bin/activate
 uv sync
+# uv sync --extra dev  # optional
 
 ```
 Set the required environment variables:
