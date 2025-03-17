@@ -247,6 +247,7 @@ def create_summary_table(artifacts: list[tuple[str, str, str]]) -> Table:
 
     return table
 
+
 def resolve_cfg(cfg):
     return OmegaConf.create(OmegaConf.to_object(cfg))  # hack
 

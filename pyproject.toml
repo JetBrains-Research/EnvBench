@@ -21,6 +21,15 @@ dependencies = [
     "ai-agents-env-setup-evaluation",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.5.0",
+    "pytest>=7.4.0",
+    "ruff>=0.3.2",
+    "pyright>=1.1.367",
+    "isort>=5.13.2",
+]
+
 [project.scripts]
 envbench = "envbench:main"
 

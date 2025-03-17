@@ -670,13 +670,28 @@ dependencies = [
     { name = "env-setup-utils" },
 ]
 
+[package.optional-dependencies]
+dev = [
+    { name = "isort" },
+    { name = "mypy" },
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "ruff" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "ai-agents-env-setup-data-collection", editable = "data_collection" },
     { name = "ai-agents-env-setup-evaluation", editable = "evaluation" },
     { name = "ai-agents-env-setup-inference", editable = "inference" },
     { name = "env-setup-utils", editable = "env_setup_utils" },
+    { name = "isort", marker = "extra == 'dev'", specifier = ">=5.13.2" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.5.0" },
+    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.367" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.2" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "exceptiongroup"
