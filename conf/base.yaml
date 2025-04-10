@@ -1,6 +1,6 @@
 defaults:
- - llm@inference.agent: gpt-4o-mini
  - _self_
+ - llm@inference.agent: gpt-4o-mini
 
 # Data paths
 tmp_dir: ${oc.env:TEMP_DIR,${hydra:runtime.cwd}/tmp}
