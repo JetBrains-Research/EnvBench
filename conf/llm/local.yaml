@@ -1,0 +1,6 @@
+model:
+  _target_: langchain_openai.ChatOpenAI
+  model: ${oc.env:HF_MODEL}
+  temperature: 0
+  base_url: http://localhost:1333/v1
+  api_key: local
