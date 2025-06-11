@@ -34,3 +34,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/jetbrains-research/envbench-${{ matrix.language }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
