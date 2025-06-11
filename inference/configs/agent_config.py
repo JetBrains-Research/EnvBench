@@ -10,8 +10,10 @@ from inference.configs.toolkit_config import EnvSetupToolkit
 from inference.src.agents.base import BaseEnvSetupAgent
 from inference.src.agents.installamatic.agent import InstallamaticAgent
 from inference.src.agents.jvm.agent import EnvSetupJVMAgent
+from inference.src.agents.multi_attempt.agent import MultiAttemptAgent
 from inference.src.agents.procedural.agent import EnvSetupProceduralAgent
 from inference.src.agents.python.agent import EnvSetupPythonAgent
+from inference.src.agents.shellcheck.agent import ShellcheckAgent
 from inference.src.toolkits.base import BaseEnvSetupToolkit
 
 
@@ -24,6 +26,8 @@ class EnvSetupAgentType(Enum):
     procedural_python = "procedural-python"
     procedural_jvm = "procedural-jvm"
     installamatic = "installamatic"
+    shellcheck = "shellcheck"
+    multi_attempt = "multi-attempt"
 
 
 class EnvSetupAgentConfig(BaseModel):
@@ -95,6 +99,25 @@ class EnvSetupAgentConfig(BaseModel):
                 instruction_provider=instruction_provider,
                 max_iterations=self.max_iterations,
                 language="jvm",
+            )
+
+        if self.agent_type == EnvSetupAgentType.shellcheck or self.agent_type == EnvSetupAgentType.shellcheck.value:
+            return ShellcheckAgent(
+                toolkit=toolkit,
+                model=model,
+                instruction_provider=instruction_provider,
+                max_iterations=self.max_iterations,
+            )
+
+        if (
+            self.agent_type == EnvSetupAgentType.multi_attempt
+            or self.agent_type == EnvSetupAgentType.multi_attempt.value
+        ):
+            return MultiAttemptAgent(
+                toolkit=toolkit,
+                model=model,
+                instruction_provider=instruction_provider,
+                max_iterations=self.max_iterations,
             )
 
         raise ValueError(

@@ -1,0 +1,9 @@
+defaults:
+  - python-bash
+  - _self_
+
+tag: oss/python-multi-attempt
+
+inference:
+  agent:
+    agent_type: multi-attempt

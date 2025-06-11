@@ -1,0 +1,10 @@
+defaults:
+  - python-bash
+  - _self_
+
+tag: oss/python-shellcheck
+
+inference:
+  agent:
+    agent_type: shellcheck
+    toolkit: shellcheck

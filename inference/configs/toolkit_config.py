@@ -5,6 +5,7 @@ from inference.src.async_bash_executor import AsyncBashExecutor
 from inference.src.toolkits import BashTerminalToolkit, JVMBashTerminalToolkit, PythonBashTerminalToolkit
 from inference.src.toolkits.base import BaseEnvSetupToolkit
 from inference.src.toolkits.installamatic import InstallamaticToolkit
+from inference.src.toolkits.shellcheck import ShellcheckToolkit
 
 
 class EnvSetupToolkit(Enum):
@@ -12,6 +13,7 @@ class EnvSetupToolkit(Enum):
     bash_jvm = "bash_jvm"
     bash_python = "bash_python"
     installamatic = "installamatic"
+    shellcheck = "shellcheck"
 
     async def instantiate(
         self,
@@ -56,5 +58,8 @@ class EnvSetupToolkit(Enum):
 
         if self == EnvSetupToolkit.installamatic:
             return await InstallamaticToolkit.create(bash_executor=bash_executor)
+
+        if self == EnvSetupToolkit.shellcheck:
+            return await ShellcheckToolkit.create(bash_executor=bash_executor)
 
         raise ValueError("Unknown configuration.")

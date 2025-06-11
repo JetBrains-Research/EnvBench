@@ -605,3 +605,66 @@ async def test_jvm_bash_terminal_toolkit(timeout=60):
         assert "exit_code" in cmd
 
     await toolkit.clean()
+
+
+@pytest.mark.asyncio
+async def test_shellcheck_toolkit():
+    """Test the ShellcheckToolkit functionality with both valid and invalid shell scripts."""
+    bash_executor = await AsyncBashExecutor.create(
+        repository="JetBrains-Research/planning-library",
+        revision="a4282f30dc5db17c6a68715295f3f7d77b766b0d",
+        image=docker_image,
+        error_message=None,
+        env_vars={},
+        repository_workdir=True,
+        container_start_timeout=300,
+        bash_timeout=120,
+        max_num_chars_bash_output=16000,
+        hf_name="JetBrains-Research/EnvBench",
+        output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
+        language="python",
+    )
+
+    from inference.src.toolkits.shellcheck import ShellcheckToolkit
+
+    toolkit = await ShellcheckToolkit.create(bash_executor=bash_executor)
+
+    # Test valid shell script - should return "No issues found."
+    valid_script = """#!/bin/bash
+echo "Hello, World!"
+ls -la
+exit 0"""
+
+    result = await toolkit.run_shellcheck(script=valid_script)
+    assert "No issues found." in result
+
+    # Test invalid shell script - should return issues
+    invalid_script = """#!/bin/bash
+echo $undefined_variable
+[ $? = 0 ]  # should use == or -eq instead of =
+if [ $condition ]; then
+    echo "condition is true"
+fi"""
+
+    result = await toolkit.run_shellcheck(script=invalid_script)
+    assert "issues reported by shellcheck" in result
+    assert "Issue 1" in result
+    assert "Severity level:" in result
+    assert "Message:" in result
+    assert "Issue location:" in result
+
+    # Test script with syntax errors
+    syntax_error_script = """#!/bin/bash
+echo "unclosed quote
+if [ true; then
+    echo "missing fi"""
+
+    result = await toolkit.run_shellcheck(script=syntax_error_script)
+    assert "issues reported by shellcheck" in result or "Error running shellcheck" in result
+
+    # Verify toolkit has the expected tools
+    tools = toolkit.get_tools()
+    assert len(tools) == 1
+    assert tools[0].name == "run_shellcheck"
+
+    await toolkit.clean()
