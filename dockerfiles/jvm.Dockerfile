@@ -45,8 +45,8 @@ ENV PATH="$SDKMAN_DIR/bin:$SDKMAN_DIR/candidates/maven/current/bin:$SDKMAN_DIR/c
 # Initialize SDKMAN and install default tools
 RUN bash -c "source $SDKMAN_DIR/bin/sdkman-init.sh && \
     sdk install java 11.0.20-tem && \
-    sdk install maven && \
-    sdk install gradle && \
+    sdk install maven 3.9.10 && \
+    sdk install gradle 8.14.2 && \
     sdk use java 11.0.20-tem"
 
 RUN pip install --no-cache-dir search-and-replace
