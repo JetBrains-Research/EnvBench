@@ -34,16 +34,32 @@ RUN adduser --force-badname --system --no-create-home _apt \
         libxml2-dev \
         libxmlsec1-dev
 
+# Python versions (version,release) from python-build-standalone
+# https://github.com/astral-sh/python-build-standalone
+COPY <<EOF /tmp/python-versions.csv
+3.13.5,20250612
+3.12.11,20250612
+3.11.13,20250612
+3.10.18,20250612
+3.9.23,20250612
+3.8.20,20241002
+EOF
+
 # Install Pyenv and multiple Python versions
-RUN git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT \
-    && $PYENV_ROOT/bin/pyenv install 3.13.1 \
-    && $PYENV_ROOT/bin/pyenv install 3.12.0 \
-    && $PYENV_ROOT/bin/pyenv install 3.11.7 \
-    && $PYENV_ROOT/bin/pyenv install 3.10.13 \
-    && $PYENV_ROOT/bin/pyenv install 3.9.18 \
-    && $PYENV_ROOT/bin/pyenv install 3.8.18 \
-    && $PYENV_ROOT/bin/pyenv global 3.13.1 \
-    && $PYENV_ROOT/bin/pyenv rehash
+RUN set -eu; \
+    git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT; \
+    ARCH=$(uname -m); \
+    DOWNLOADS="https://github.com/astral-sh/python-build-standalone/releases/download"; \
+    while IFS="," read -r VERSION RELEASE; do \
+        mkdir -p "$PYENV_ROOT/versions/$VERSION"; \
+        wget --quiet "$DOWNLOADS/$RELEASE/cpython-$VERSION+$RELEASE-$ARCH-unknown-linux-gnu-install_only_stripped.tar.gz" \
+            -O "/tmp/$VERSION.tar.gz"; \
+        tar -xzf "/tmp/$VERSION.tar.gz" \
+            -C "$PYENV_ROOT/versions/$VERSION" \
+            --strip-components=1; \
+        rm "/tmp/$VERSION.tar.gz"; \
+    done < /tmp/python-versions.csv; \
+    pyenv rehash
 
 # Install miniconda
 ENV CONDA_DIR=/opt/conda
@@ -81,8 +97,9 @@ WORKDIR /data/project
 ENV CONDA_ALWAYS_YES=true
 
 # Global pyenv versions:
-# python3.13 points to 3.13.1, python3.12 points to 3.12.0, ...
-RUN pyenv global 3.13.1 3.12.0 3.11.7 3.10.13 3.9.18 3.8.18
+# python3.13 points to 3.13.5, python3.12 points to 3.12.11, ...
+RUN pyenv global $(cut -d"," -f1 /tmp/python-versions.csv | tr "\n" " ") \
+    && rm /tmp/python-versions.csv
 
 # Conda init bash
 RUN conda init bash
