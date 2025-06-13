@@ -34,8 +34,8 @@ RUN adduser --force-badname --system --no-create-home _apt \
         libxml2-dev \
         libxmlsec1-dev
 
-# Python versions (version,release) from python-build-standalone
-# https://github.com/astral-sh/python-build-standalone
+# CSV with version and release of python-build-standalone: https://github.com/astral-sh/python-build-standalone
+# FIXME: Consider bumping the patch versions of these one day to support `install_only_stripped`
 COPY <<EOF /tmp/python-versions.csv
 3.13.1,20241205
 3.12.0,20231002
@@ -52,7 +52,7 @@ RUN set -eu; \
     DOWNLOADS="https://github.com/astral-sh/python-build-standalone/releases/download"; \
     while IFS="," read -r VERSION RELEASE; do \
         mkdir -p "$PYENV_ROOT/versions/$VERSION"; \
-        wget --quiet "$DOWNLOADS/$RELEASE/cpython-$VERSION+$RELEASE-$ARCH-unknown-linux-gnu-install_only_stripped.tar.gz" \
+        wget --quiet "$DOWNLOADS/$RELEASE/cpython-$VERSION+$RELEASE-$ARCH-unknown-linux-gnu-install_only.tar.gz" \
             -O "/tmp/$VERSION.tar.gz"; \
         tar -xzf "/tmp/$VERSION.tar.gz" \
             -C "$PYENV_ROOT/versions/$VERSION" \
