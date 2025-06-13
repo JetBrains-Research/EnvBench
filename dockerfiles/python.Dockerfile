@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 # Set environment variables
 ENV PYENV_ROOT="/root/.pyenv" \
-    PATH="/root/.pyenv/bin:/root/.pyenv/shims:/root/.pyenv/versions/3.12.0/bin:$PATH" \
+    PATH="/root/.pyenv/bin:/root/.pyenv/shims:/root/.pyenv/versions/3.12.11/bin:$PATH" \
     DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies and additional tools
