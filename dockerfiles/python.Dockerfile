@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 # Set environment variables
 ENV PYENV_ROOT="/root/.pyenv" \
-    PATH="/root/.pyenv/bin:/root/.pyenv/shims:/root/.pyenv/versions/3.12.11/bin:$PATH" \
+    PATH="/root/.pyenv/bin:/root/.pyenv/shims:/root/.pyenv/versions/3.12.0/bin:$PATH" \
     DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies and additional tools
@@ -34,15 +34,15 @@ RUN adduser --force-badname --system --no-create-home _apt \
         libxml2-dev \
         libxmlsec1-dev
 
-# Python versions (version,release) from python-build-standalone
-# https://github.com/astral-sh/python-build-standalone
+# CSV with version and release of python-build-standalone: https://github.com/astral-sh/python-build-standalone
+# FIXME: Consider bumping the patch versions of these one day to support `install_only_stripped`
 COPY <<EOF /tmp/python-versions.csv
-3.13.5,20250612
-3.12.11,20250612
-3.11.13,20250612
-3.10.18,20250612
-3.9.23,20250612
-3.8.20,20241002
+3.13.1,20241205
+3.12.0,20231002
+3.11.7,20240107
+3.10.13,20240224
+3.9.18,20240224
+3.8.18,20240224
 EOF
 
 # Install Pyenv and multiple Python versions
@@ -52,7 +52,7 @@ RUN set -eu; \
     DOWNLOADS="https://github.com/astral-sh/python-build-standalone/releases/download"; \
     while IFS="," read -r VERSION RELEASE; do \
         mkdir -p "$PYENV_ROOT/versions/$VERSION"; \
-        wget --quiet "$DOWNLOADS/$RELEASE/cpython-$VERSION+$RELEASE-$ARCH-unknown-linux-gnu-install_only_stripped.tar.gz" \
+        wget --quiet "$DOWNLOADS/$RELEASE/cpython-$VERSION+$RELEASE-$ARCH-unknown-linux-gnu-install_only.tar.gz" \
             -O "/tmp/$VERSION.tar.gz"; \
         tar -xzf "/tmp/$VERSION.tar.gz" \
             -C "$PYENV_ROOT/versions/$VERSION" \
