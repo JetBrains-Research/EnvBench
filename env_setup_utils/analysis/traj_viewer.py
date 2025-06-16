@@ -95,7 +95,7 @@ def analyze_trajectory(messages: List[Dict[str, Any]]) -> Dict[str, Any]:
         has_commands = True
         # Extract failed commands
         for cmd in messages[-1].get("commands", []):
-            if cmd["exit_code"] != 0:
+            if not cmd or cmd["exit_code"] != 0:
                 failed_commands.append(cmd)
 
     # Calculate total cost and tokens

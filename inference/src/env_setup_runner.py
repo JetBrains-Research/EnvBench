@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+from typing import Any, Dict
 
 import jsonlines
 from langchain_core.runnables import RunnableConfig
@@ -18,9 +19,11 @@ class EnvSetupRunner:
         agent: BaseEnvSetupAgent,
         log_trajectory: bool,
         logging_dir: str,
+        extra_info: Dict[str, Any] = {},
     ):
         self.repository = repository
         self.revision = revision
+        self.extra_info = extra_info
         self.agent = agent
 
         self.log_trajectory = log_trajectory
@@ -29,7 +32,9 @@ class EnvSetupRunner:
         open(self.trajectory_file, "w").close()
 
     async def arun(self) -> None:
-        initial_state = self.agent.construct_initial_state(repository=self.repository, revision=self.revision)
+        initial_state = self.agent.construct_initial_state(
+            repository=self.repository, revision=self.revision, **self.extra_info
+        )
 
         graph = self.agent.get_agent()
 

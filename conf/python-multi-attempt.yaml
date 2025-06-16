@@ -7,3 +7,12 @@ tag: oss/python-multi-attempt
 inference:
   agent:
     agent_type: multi-attempt
+    max_iterations: 2
+  data_source:
+    hf:
+      hub_name: JetBrains-Research/envbench-zeroshot-rl
+      configs:
+        - default
+      splits: 
+        - train
+        - test

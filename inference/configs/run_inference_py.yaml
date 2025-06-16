@@ -20,7 +20,8 @@ data_source:
     hub_name: JetBrains-Research/EnvBench
     configs:
       - splits
-    split: python_baseline_failure
+    splits: 
+      - python_baseline_failure
 
   local:
     _target_: env_setup_utils.data_sources.LocalFileDataSource

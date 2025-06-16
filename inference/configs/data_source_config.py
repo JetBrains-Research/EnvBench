@@ -10,7 +10,7 @@ from .instantiatable_config import InstantiatableConfig
 class HFDataSourceConfig(InstantiatableConfig[HFDataSource]):
     hub_name: str
     configs: List[str]
-    split: str
+    splits: List[str]
 
 
 class LocalFileDataSourceConfig(InstantiatableConfig[LocalFileDataSource]):

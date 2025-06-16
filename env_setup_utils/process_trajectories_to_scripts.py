@@ -87,6 +87,13 @@ def parse_script_from_trajectory(trajectory: List[Dict[str, Any]]) -> str:
     commands = last_message.get("commands", [])
     if isinstance(commands, str):
         commands = json.loads(commands)
+    commands = [command for command in commands if command is not None]
+
+    # if we have *scripts*, we return the last one
+    if all(command["command"].startswith("#!/bin/bash\n\n") for command in commands):
+        if len(commands) > 0:
+            return commands[-1]["command"]
+        return ""
 
     return "\n".join(format_command(command) for command in commands)
 

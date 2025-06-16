@@ -72,8 +72,6 @@ def create_shellcheck_workflow(
 
     def call_model(state: ShellcheckState) -> ShellcheckState:
         new_message = model.invoke(state["messages"])
-        new_messages = list(state["messages"])
-        new_messages.append(new_message)
         return {"messages": [new_message]}
 
     # Create the graph

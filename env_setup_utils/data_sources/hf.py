@@ -12,7 +12,7 @@ class HFDataSource(BaseDataSource):
         self,
         hub_name: str,
         configs: Optional[List[str]] = None,
-        split: Optional[str] = None,
+        splits: Optional[List[str]] = None,
         cache_dir: Optional[str] = None,
     ):
         self._hub_name = hub_name
@@ -22,9 +22,10 @@ class HFDataSource(BaseDataSource):
             self._configs = configs
         else:
             self._configs = get_dataset_config_names(self._hub_name)
-        self._split = split
+        self._splits = splits
 
     def __iter__(self):
         for config in self._configs:
-            dataset = load_dataset(self._hub_name, config, split=self._split, cache_dir=self._cache_dir)
-            yield from dataset
+            for split in self._splits:
+                dataset = load_dataset(self._hub_name, config, split=split, cache_dir=self._cache_dir)
+                yield from dataset

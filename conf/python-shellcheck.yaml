@@ -8,3 +8,12 @@ inference:
   agent:
     agent_type: shellcheck
     toolkit: shellcheck
+    max_iterations: 3
+  data_source:
+    hf:
+      hub_name: JetBrains-Research/envbench-zeroshot-rl
+      configs:
+        - default
+      splits: 
+        - train
+        - test

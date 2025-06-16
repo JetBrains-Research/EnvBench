@@ -42,6 +42,7 @@ async def process_single_datapoint(
     repository: str,
     revision: str,
     config: EnvSetupRunnerConfig,
+    extra_info: Dict[str, Any],
 ) -> None:
     try:
         toolkit = await config.agent.toolkit.instantiate(
@@ -68,6 +69,7 @@ async def process_single_datapoint(
             agent=agent,
             log_trajectory=config.log_trajectory,
             logging_dir=config.logging_dir,
+            extra_info=extra_info,
         )
         if config.global_timeout:
             try:
@@ -105,6 +107,7 @@ async def run_experiment(cfg: DictConfig):
             shutil.rmtree(cfg_model.logging_dir)
 
     data_source = getattr(cfg_model.data_source, cfg_model.data_source.type).instantiate()
+    os.makedirs(cfg_model.logging_dir, exist_ok=True)
 
     if not cfg_model.rewrite_trajectories and os.path.exists(cfg_model.logging_dir):
         processed_trajectories: List[Dict[str, str]] = []
@@ -122,6 +125,7 @@ async def run_experiment(cfg: DictConfig):
                 config=cfg_model,
                 repository=example["repository"],
                 revision=example["revision"],
+                extra_info={key: value for key, value in example.items() if key not in ["repository", "revision"]},
             )
             for example in data_source
             if {"repository": example["repository"], "revision": example["revision"]} not in processed_trajectories
@@ -132,6 +136,7 @@ async def run_experiment(cfg: DictConfig):
                 config=cfg_model,
                 repository=example["repository"],
                 revision=example["revision"],
+                extra_info={key: value for key, value in example.items() if key not in ["repository", "revision"]},
             )
             for example in data_source
         ]
