@@ -3,9 +3,10 @@ name: Push to GitHub Packages
 on:
   push:
     branches:
-      - main
+      - '**'
     paths:
       - 'dockerfiles/**.Dockerfile'
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -33,6 +34,6 @@ jobs:
           file: dockerfiles/${{ matrix.language }}.Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/jetbrains-research/envbench-${{ matrix.language }}:latest
+          tags: ghcr.io/jetbrains-research/envbench-${{ matrix.language }}:${{ github.ref_name == 'main' && 'latest' || github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
