@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - stable
     paths:
       - 'dockerfiles/**.Dockerfile'
 
@@ -27,4 +28,4 @@ jobs:
           context: .
           file: dockerfiles/${{ matrix.language }}.Dockerfile
           push: true
-          tags: ghcr.io/jetbrains-research/envbench-${{ matrix.language }}:latest
+          tags: ghcr.io/jetbrains-research/envbench-${{ matrix.language }}:${{ github.ref_name == 'main' && 'latest' || github.ref_name }}
