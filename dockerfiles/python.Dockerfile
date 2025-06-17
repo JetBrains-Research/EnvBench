@@ -57,6 +57,8 @@ RUN set -eu; \
         tar -xzf "/tmp/$VERSION.tar.gz" \
             -C "$PYENV_ROOT/versions/$VERSION" \
             --strip-components=1; \
+        ln -frs "$PYENV_ROOT/versions/$VERSION/bin/python${VERSION%.*}" \
+                "$PYENV_ROOT/versions/$VERSION/bin/python"; \
         rm "/tmp/$VERSION.tar.gz"; \
     done < /tmp/python-versions.csv; \
     pyenv rehash
