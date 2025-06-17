@@ -34,21 +34,38 @@ RUN adduser --force-badname --system --no-create-home _apt \
         libxml2-dev \
         libxmlsec1-dev
 
+# CSV with version and release of python-build-standalone: https://github.com/astral-sh/python-build-standalone
+# FIXME: Consider bumping the patch versions of these one day to support `install_only_stripped`
+COPY <<EOF /tmp/python-versions.csv
+3.13.1,20241205
+3.12.0,20231002
+3.11.7,20240107
+3.10.13,20240224
+3.9.18,20240224
+3.8.18,20240224
+EOF
+
 # Install Pyenv and multiple Python versions
-RUN git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT \
-    && $PYENV_ROOT/bin/pyenv install 3.13.1 \
-    && $PYENV_ROOT/bin/pyenv install 3.12.0 \
-    && $PYENV_ROOT/bin/pyenv install 3.11.7 \
-    && $PYENV_ROOT/bin/pyenv install 3.10.13 \
-    && $PYENV_ROOT/bin/pyenv install 3.9.18 \
-    && $PYENV_ROOT/bin/pyenv install 3.8.18 \
-    && $PYENV_ROOT/bin/pyenv global 3.13.1 \
-    && $PYENV_ROOT/bin/pyenv rehash
+RUN set -eu; \
+    git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT; \
+    ARCH=$(uname -m); \
+    DOWNLOADS="https://github.com/astral-sh/python-build-standalone/releases/download"; \
+    while IFS="," read -r VERSION RELEASE; do \
+        mkdir -p "$PYENV_ROOT/versions/$VERSION"; \
+        wget --quiet "$DOWNLOADS/$RELEASE/cpython-$VERSION+$RELEASE-$ARCH-unknown-linux-gnu-install_only.tar.gz" \
+            -O "/tmp/$VERSION.tar.gz"; \
+        tar -xzf "/tmp/$VERSION.tar.gz" \
+            -C "$PYENV_ROOT/versions/$VERSION" \
+            --strip-components=1; \
+        rm "/tmp/$VERSION.tar.gz"; \
+    done < /tmp/python-versions.csv; \
+    pyenv rehash
 
 # Install miniconda
 ENV CONDA_DIR=/opt/conda
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
-    /bin/bash ~/miniconda.sh -b -p /opt/conda
+RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/25.3.0-3/Miniforge3-25.3.0-3-Linux-$(uname -m).sh -O /tmp/miniconda.sh \
+    && /bin/bash /tmp/miniconda.sh -b -p /opt/conda \
+    && rm /tmp/miniconda.sh
 
 # Put conda in path so we can use conda activate
 ENV PATH=$CONDA_DIR/bin:$PATH
@@ -80,8 +97,9 @@ WORKDIR /data/project
 ENV CONDA_ALWAYS_YES=true
 
 # Global pyenv versions:
-# python3.13 points to 3.13.1, python3.12 points to 3.12.0, ...
-RUN pyenv global 3.13.1 3.12.0 3.11.7 3.10.13 3.9.18 3.8.18
+# python3.13 points to 3.13.5, python3.12 points to 3.12.11, ...
+RUN pyenv global $(cut -d"," -f1 /tmp/python-versions.csv | tr "\n" " ") \
+    && rm /tmp/python-versions.csv
 
 # Conda init bash
 RUN conda init bash
