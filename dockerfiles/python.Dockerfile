@@ -65,7 +65,7 @@ RUN set -eu; \
 
 # Install miniconda
 ENV CONDA_DIR=/opt/conda
-RUN wget --quiet https://github.com/conda-forge/miniforge/releases/download/25.3.0-3/Miniforge3-25.3.0-3-Linux-$(uname -m).sh -O /tmp/miniconda.sh \
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py313_25.3.1-1-Linux-$(uname -m).sh -O /tmp/miniconda.sh \
     && /bin/bash /tmp/miniconda.sh -b -p /opt/conda \
     && rm /tmp/miniconda.sh
 
