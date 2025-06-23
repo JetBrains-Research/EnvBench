@@ -1,14 +1,39 @@
 from pathlib import Path
 from textwrap import dedent
 from typing import List
+import urllib.request
 
 from langchain_core.messages import BaseMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 
 from .state_schema import EnvSetupReadOnlyState
 
-dockerfile_path = Path(__file__).parents[3] / "dockerfiles" / "python.Dockerfile"
-dockerfile = dockerfile_path.read_text()
+
+def get_dockerfile_content() -> str:
+    """Get Dockerfile content from GitHub or local fallback."""
+    # Try GitHub first
+    github_urls = ["https://raw.githubusercontent.com/JetBrains-Research/EnvBench/main/dockerfiles/python.Dockerfile"]
+
+    for url in github_urls:
+        try:
+            with urllib.request.urlopen(url, timeout=10) as response:
+                return response.read().decode("utf-8")
+        except Exception:
+            continue
+
+    # Fallback to local file if GitHub fails and file exists
+    try:
+        dockerfile_path = Path(__file__).parents[3] / "dockerfiles" / "python.Dockerfile"
+        if dockerfile_path.exists():
+            return dockerfile_path.read_text()
+    except Exception:
+        pass
+
+    # Final fallback - basic description
+    return "Ubuntu 22.04 with Python, pyenv, poetry, and development tools installed."
+
+
+dockerfile = get_dockerfile_content()
 
 system_prompt = dedent(
     """
