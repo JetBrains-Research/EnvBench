@@ -44,6 +44,7 @@ class AsyncBashExecutor:
         clear_repo: bool,
         exec_instance: Exec,
         exec_stream: Stream,
+        read_only: bool = False,
     ):
         self.repository = repository
         self.revision = revision
@@ -53,6 +54,7 @@ class AsyncBashExecutor:
         self.repository_workdir = repository_workdir
         self.command = command
         self.error_message = error_message or self.DEFAULT_ERROR
+        self.read_only = read_only
 
         self.container_start_timeout = container_start_timeout
         self.bash_timeout = bash_timeout
@@ -119,6 +121,7 @@ class AsyncBashExecutor:
         container_start_timeout: int = 30,
         bash_timeout: Optional[int] = None,
         max_num_chars_bash_output: Optional[int] = None,
+        read_only: bool = False,
     ) -> "AsyncBashExecutor":
         env_vars = env_vars or {}
         client = Docker()
@@ -135,6 +138,7 @@ class AsyncBashExecutor:
                 hf_name=hf_name,
                 output_dir=output_dir,
                 language=language,
+                read_only=read_only,
             )
 
             exec_instance, exec_stream = await cls._init_exec_stream(
@@ -164,6 +168,7 @@ class AsyncBashExecutor:
                 language=language,
                 clear_repo=clear_repo,
                 command=command,
+                read_only=read_only,
             )
         except Exception:
             await client.close()
@@ -195,6 +200,7 @@ class AsyncBashExecutor:
         language: str,
         output_dir: str,
         timeout: int,
+        read_only: bool = False,
     ) -> DockerContainer:
         logging.info(f"[{repository}@{revision}] Downloading repository.")
         local_repo_path = AsyncBashExecutor._download_repo(
@@ -217,16 +223,45 @@ class AsyncBashExecutor:
             else ["-c", command.format(repository=repository, repository_dir=repository_dir, revision=revision)]
         )
 
-        container = await client.containers.create(
-            {
-                "Image": image,
-                "Cmd": final_command,
-                "Env": [f"{key}={value}" for key, value in env_vars.items()],
-                "Entrypoint": "/bin/bash",
-                "Detach": True,
-                "HostConfig": {"Binds": [f"{local_repo_path}:/data/project/{os.path.basename(local_repo_path)}:rw"]},
+        container_config = {
+            "Image": image,
+            "Cmd": final_command,
+            "Env": [f"{key}={value}" for key, value in env_vars.items()],
+            "Entrypoint": "/bin/bash",
+            "Detach": True,
+        }
+
+        # Configure host config based on read-only mode
+        host_config = {"Binds": [f"{local_repo_path}:/data/project/{os.path.basename(local_repo_path)}:ro"]}
+
+        if read_only:
+            # Make entire root filesystem read-only
+            host_config["ReadonlyRootfs"] = True
+            # Add minimal writable directories for essential operations only
+            host_config["Binds"].extend(
+                [
+                    "/dev/shm:/dev/shm:rw"  # Only shared memory, remove /tmp and /var/tmp
+                ]
+            )
+            # Create read-only tmpfs mounts to prevent most write operations
+            host_config["Tmpfs"] = {
+                "/tmp": "noexec,nosuid,size=100m,ro",  # Read-only tmp
+                "/var/tmp": "noexec,nosuid,size=100m,ro",  # Read-only var/tmp
+                "/root/.local": "noexec,nosuid,size=100m,ro",  # Prevent pip user installs
+                "/root/.cache": "noexec,nosuid,size=100m,ro",  # Prevent cache writes
             }
-        )
+            # Remove capabilities and prevent privilege escalation
+            host_config["SecurityOpt"] = ["no-new-privileges"]
+            host_config["CapDrop"] = ["ALL"]  # Drop all capabilities
+            host_config["Capabilities"] = []
+            logging.info(f"[{repository}@{revision}] Starting container in read-only mode")
+        else:
+            # Normal read-write mode
+            host_config["Binds"] = [f"{local_repo_path}:/data/project/{os.path.basename(local_repo_path)}:rw"]
+
+        container_config["HostConfig"] = host_config
+
+        container = await client.containers.create(container_config)
         await container.start()
         logging.info(f"[{repository}@{revision}] Starting container {container.id}.")
 
@@ -280,6 +315,7 @@ class AsyncBashExecutor:
             output_dir=self.output_dir,
             timeout=self.container_start_timeout,
             command=self.command,
+            read_only=self.read_only,
         )
         self.container = container
 

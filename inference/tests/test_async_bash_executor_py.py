@@ -668,3 +668,81 @@ if [ true; then
     assert tools[0].name == "run_shellcheck"
 
     await toolkit.clean()
+
+
+@pytest.mark.asyncio
+async def test_readonly_executor():
+    """Test the read-only executor with various commands."""
+
+    # Create a read-only executor
+    bash_executor = await AsyncBashExecutor.create(
+        repository="JetBrains-Research/planning-library",
+        revision="a4282f30dc5db17c6a68715295f3f7d77b766b0d",
+        image=docker_image,
+        error_message=None,
+        env_vars={},
+        repository_workdir=True,
+        container_start_timeout=300,
+        bash_timeout=120,
+        max_num_chars_bash_output=16000,
+        hf_name="JetBrains-Research/EnvBench",
+        output_dir=f"/{os.path.expanduser('~')}/tmp/repos",
+        language="python",
+        read_only=True,
+    )
+
+    print("=== Testing Read-Only Executor ===\n")
+
+    # Test 1: Read operations (should work)
+    print("1. Testing read operations:")
+
+    commands = [
+        "ls -la",
+        "python --version",
+        "pyenv versions",
+        "cat pyproject.toml",
+        "which python",
+        "echo $PATH",
+        "pwd",
+        "find . -name '*.py' | head -5",
+    ]
+
+    for cmd in commands:
+        print(f"\nRunning: {cmd}")
+        try:
+            output, exit_code = await bash_executor.execute_bash_command(cmd)
+            assert exit_code == 0, "Read commands should be available"
+            print(f"Exit code: {exit_code}")
+            print(f"Output: {output[:200]}...")
+        except Exception as e:
+            print(f"Error: {e}")
+
+    # Test 2: Write operations (should fail)
+    print("\n\n2. Testing write operations (should fail):")
+
+    write_commands = [
+        "pip install some-nonexistent-package-12345",  # Package that doesn't exist
+        "pip install --user matplotlib",  # Try user installation
+        "apt-get install -y curl",  # System package installation
+        "pyenv install 3.9.0",  # Python version installation
+        "echo 'test' > /tmp/test.txt",  # Write to tmp
+        "mkdir /tmp/testdir",  # Create directory in tmp
+        "touch /tmp/testfile",  # Create file in tmp
+        "echo 'test' > /root/.local/test.txt",  # Write to user directory
+        "mkdir /root/.cache/testdir",  # Create cache directory
+        "conda install numpy",  # Conda installation
+        "poetry install",  # Poetry installation
+        "npm install express",  # npm installation (if available)
+    ]
+
+    for cmd in write_commands:
+        print(f"\nRunning: {cmd}")
+        try:
+            output, exit_code = await bash_executor.execute_bash_command(cmd)
+            assert exit_code != 0, "Write commands should not be available"
+            print(f"Exit code: {exit_code}")
+            print(f"Output: {output[:200]}...")
+        except Exception as e:
+            print(f"Error: {e}")
+
+    await bash_executor.clean()

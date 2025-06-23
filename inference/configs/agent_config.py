@@ -8,6 +8,7 @@ from inference.configs.context_provider_config import EnvSetupInstructionProvide
 from inference.configs.instantiatable_config import InstantiatableConfig
 from inference.configs.toolkit_config import EnvSetupToolkit
 from inference.src.agents.base import BaseEnvSetupAgent
+from inference.src.agents.bash_read_only.agent import EnvSetupReadOnlyAgent
 from inference.src.agents.installamatic.agent import InstallamaticAgent
 from inference.src.agents.jvm.agent import EnvSetupJVMAgent
 from inference.src.agents.multi_attempt.agent import MultiAttemptAgent
@@ -28,6 +29,7 @@ class EnvSetupAgentType(Enum):
     installamatic = "installamatic"
     shellcheck = "shellcheck"
     multi_attempt = "multi-attempt"
+    readonly = "readonly"
 
 
 class EnvSetupAgentConfig(BaseModel):
@@ -114,6 +116,14 @@ class EnvSetupAgentConfig(BaseModel):
             or self.agent_type == EnvSetupAgentType.multi_attempt.value
         ):
             return MultiAttemptAgent(
+                toolkit=toolkit,
+                model=model,
+                instruction_provider=instruction_provider,
+                max_iterations=self.max_iterations,
+            )
+
+        if self.agent_type == EnvSetupAgentType.readonly or self.agent_type == EnvSetupAgentType.readonly.value:
+            return EnvSetupReadOnlyAgent(
                 toolkit=toolkit,
                 model=model,
                 instruction_provider=instruction_provider,

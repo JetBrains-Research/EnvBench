@@ -4,6 +4,7 @@ from typing import Dict, Optional
 from inference.src.async_bash_executor import AsyncBashExecutor
 from inference.src.toolkits import BashTerminalToolkit, JVMBashTerminalToolkit, PythonBashTerminalToolkit
 from inference.src.toolkits.base import BaseEnvSetupToolkit
+from inference.src.toolkits.bash_terminal_readonly import BashTerminalReadOnlyToolkit
 from inference.src.toolkits.installamatic import InstallamaticToolkit
 from inference.src.toolkits.shellcheck import ShellcheckToolkit
 
@@ -14,6 +15,7 @@ class EnvSetupToolkit(Enum):
     bash_python = "bash_python"
     installamatic = "installamatic"
     shellcheck = "shellcheck"
+    readonly = "readonly"
 
     async def instantiate(
         self,
@@ -31,6 +33,9 @@ class EnvSetupToolkit(Enum):
         language: str,
         clear_repo: bool,
     ) -> BaseEnvSetupToolkit:
+        # Determine if we need read-only mode
+        read_only = self == EnvSetupToolkit.readonly
+
         bash_executor = await AsyncBashExecutor.create(
             repository=repository,
             revision=revision,
@@ -45,6 +50,7 @@ class EnvSetupToolkit(Enum):
             output_dir=output_dir,
             language=language,
             clear_repo=clear_repo,
+            read_only=read_only,
         )
 
         if self == EnvSetupToolkit.bash:
@@ -55,6 +61,9 @@ class EnvSetupToolkit(Enum):
 
         if self == EnvSetupToolkit.bash_python:
             return await PythonBashTerminalToolkit.create(bash_executor=bash_executor)
+
+        if self == EnvSetupToolkit.readonly:
+            return await BashTerminalReadOnlyToolkit.create(bash_executor=bash_executor)
 
         if self == EnvSetupToolkit.installamatic:
             return await InstallamaticToolkit.create(bash_executor=bash_executor)
