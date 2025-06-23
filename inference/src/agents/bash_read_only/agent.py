@@ -4,12 +4,13 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from langgraph.graph.graph import CompiledGraph
 
+from graphs.readonly import create_read_only_workflow
+
 from ...async_bash_executor import CommandExecutionResult
 from ...context_providers.build_instructions import EnvSetupInstructionProvider
 from ...toolkits.base import BaseEnvSetupToolkit
 from ...utils import message_to_info
 from ..base import BaseEnvSetupAgent
-from .graph import create_read_only_workflow
 from .state_schema import EnvSetupReadOnlyState, EnvSetupReadOnlyTrajectoryEntry, EnvSetupReadOnlyUpdate
 
 

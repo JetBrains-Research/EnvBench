@@ -1,15 +1,8 @@
-from operator import add
-from typing import Annotated, List, Sequence, TypedDict
+from typing import List, TypedDict
 
-from langchain_core.messages import BaseMessage
-
+from graphs.multi_attempt.state_schema import MultiAttemptState
 from inference.src.async_bash_executor import CommandExecutionResult
 from inference.src.utils.messages_info import MessageInfo
-
-
-class MultiAttemptState(TypedDict, total=False):
-    messages: Annotated[Sequence[BaseMessage], add]
-    turn: int
 
 
 class MultiAttemptUpdate(TypedDict, total=False):

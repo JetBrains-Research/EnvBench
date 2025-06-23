@@ -141,6 +141,7 @@ async def run_experiment(cfg: DictConfig):
             for example in data_source
         ]
 
+    coroutines = coroutines[:2]
     logging.info(f"Got {len(coroutines)} repositories to process.")
 
     if cfg_model.langsmith_project is not None:

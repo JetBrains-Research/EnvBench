@@ -1,18 +1,8 @@
-from operator import add
-from typing import Annotated, List, Sequence, TypedDict
+from typing import List, TypedDict
 
-from langchain_core.messages import BaseMessage
-
+from graphs.shellcheck.state_schema import ShellcheckState
 from inference.src.async_bash_executor import CommandExecutionResult
 from inference.src.utils.messages_info import MessageInfo
-
-
-class ShellcheckState(TypedDict, total=False):
-    messages: Annotated[Sequence[BaseMessage], add]
-    turn: Annotated[int, "Current turn number"]
-    max_turns: Annotated[int, "Maximum number of turns allowed"]
-    should_continue: bool | None
-    script: str | None
 
 
 class ShellcheckUpdate(TypedDict, total=False):

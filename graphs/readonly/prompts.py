@@ -7,7 +7,7 @@ from langchain_core.runnables import RunnableConfig
 
 from .state_schema import EnvSetupReadOnlyState
 
-dockerfile_path = Path(__file__).parents[4] / "dockerfiles" / "python.Dockerfile"
+dockerfile_path = Path(__file__).parents[2] / "dockerfiles" / "python.Dockerfile"
 dockerfile = dockerfile_path.read_text()
 
 system_prompt = dedent(
