@@ -19,7 +19,7 @@ dependencies = [
     "ai-agents-env-setup-data-collection",
     "ai-agents-env-setup-inference",
     "ai-agents-env-setup-evaluation",
-    "ai-agents-env-setup-graphs",
+    "envbench-graphs",
 ]
 
 [project.optional-dependencies]
@@ -63,7 +63,7 @@ env-setup-utils = { workspace = true }
 ai-agents-env-setup-data-collection = { workspace = true }
 ai-agents-env-setup-inference = { workspace = true }
 ai-agents-env-setup-evaluation = { workspace = true }
-ai-agents-env-setup-graphs = { workspace = true }
+envbench-graphs = { workspace = true }
 
 [tool.ruff]
 line-length = 120

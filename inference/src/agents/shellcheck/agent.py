@@ -1,9 +1,8 @@
 from typing import List, Optional
 
+from envbench_graphs.shellcheck import ShellcheckState, create_shellcheck_workflow
 from langchain_core.language_models import BaseChatModel
 from langgraph.graph.graph import CompiledGraph
-
-from graphs.shellcheck import ShellcheckState, create_shellcheck_workflow
 
 from ...async_bash_executor import CommandExecutionResult
 from ...context_providers.build_instructions import EnvSetupInstructionProvider

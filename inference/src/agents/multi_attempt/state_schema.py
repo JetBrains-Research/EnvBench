@@ -1,6 +1,7 @@
 from typing import List, TypedDict
 
-from graphs.multi_attempt.state_schema import MultiAttemptState
+from envbench_graphs.multi_attempt.state_schema import MultiAttemptState
+
 from inference.src.async_bash_executor import CommandExecutionResult
 from inference.src.utils.messages_info import MessageInfo
 

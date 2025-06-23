@@ -1,6 +1,7 @@
 from typing import List, TypedDict
 
-from graphs.shellcheck.state_schema import ShellcheckState
+from envbench_graphs.shellcheck.state_schema import ShellcheckState
+
 from inference.src.async_bash_executor import CommandExecutionResult
 from inference.src.utils.messages_info import MessageInfo
 

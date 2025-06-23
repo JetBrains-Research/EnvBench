@@ -19,6 +19,7 @@ members = [
     "ai-agents-env-setup-inference",
     "env-setup-utils",
     "envbench",
+    "envbench-graphs",
 ]
 
 [[package]]
@@ -668,6 +669,7 @@ dependencies = [
     { name = "ai-agents-env-setup-evaluation" },
     { name = "ai-agents-env-setup-inference" },
     { name = "env-setup-utils" },
+    { name = "envbench-graphs" },
 ]
 
 [package.optional-dependencies]
@@ -686,11 +688,40 @@ requires-dist = [
     { name = "ai-agents-env-setup-evaluation", editable = "evaluation" },
     { name = "ai-agents-env-setup-inference", editable = "inference" },
     { name = "env-setup-utils", editable = "env_setup_utils" },
+    { name = "envbench-graphs", editable = "graphs" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.13.2" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.5.0" },
     { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.367" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.25.3" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.2" },
+]
+provides-extras = ["dev"]
+
+[[package]]
+name = "envbench-graphs"
+version = "0.0.1"
+source = { editable = "graphs" }
+dependencies = [
+    { name = "langchain-core" },
+    { name = "langgraph" },
+    { name = "pydantic" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "langchain-core", specifier = ">=0.2.0" },
+    { name = "langgraph", specifier = ">=0.2.0" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.5.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.2" },
 ]
 provides-extras = ["dev"]
