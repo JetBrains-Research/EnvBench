@@ -13,7 +13,7 @@ from .state_schema import ShellcheckState
 def create_shellcheck_workflow(
     model: BaseChatModel,
     run_shellcheck_func: Callable[[str], Awaitable[str]],
-    max_iterations: Optional[int] = None,
+    max_iterations: Optional[int] = 2,
 ) -> CompiledGraph:
     """Create a compiled workflow graph for shellcheck operations.
 

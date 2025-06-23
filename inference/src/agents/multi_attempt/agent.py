@@ -2,6 +2,7 @@ import re
 from typing import List, Optional
 
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import BaseMessage
 from langgraph.graph.graph import CompiledGraph
 
 from ...async_bash_executor import CommandExecutionResult
@@ -24,7 +25,7 @@ class MultiAttemptAgent(BaseEnvSetupAgent[MultiAttemptState, MultiAttemptUpdate,
         self.toolkit = toolkit
         self.model = model
         self.instruction_provider = instruction_provider
-        self._max_iterations = max_iterations
+        self._max_iterations = max_iterations if max_iterations else 2
         self._resulting_command: Optional[CommandExecutionResult] = None
 
     @property
@@ -47,10 +48,10 @@ class MultiAttemptAgent(BaseEnvSetupAgent[MultiAttemptState, MultiAttemptUpdate,
             return {"messages": kwargs["messages"]}
         return {}
 
-    def process_update_for_trajectory(self, update: MultiAttemptUpdate, *args, **kwargs) -> MultiAttemptTrajectoryEntry:
+    def process_update_for_trajectory(self, update: MultiAttemptUpdate, *args, **kwargs) -> MultiAttemptTrajectoryEntry:  # type: ignore[override]
         node = "unknown"
-        messages = []
-        commands = []
+        messages: List[BaseMessage] = []
+        commands: List[CommandExecutionResult] = []
 
         if "initialize" in update:
             node = "initialize"

@@ -9,3 +9,5 @@ model:
   extra_body:
     chat_template_kwargs:
       enable_thinking: false
+    top_k: 20
+    min_p: 0

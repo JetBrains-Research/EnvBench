@@ -7,7 +7,7 @@ from inference.src.async_bash_executor import CommandExecutionResult
 from inference.src.utils.messages_info import MessageInfo
 
 
-class ShellcheckState(TypedDict):
+class ShellcheckState(TypedDict, total=False):
     messages: Annotated[Sequence[BaseMessage], add]
     turn: Annotated[int, "Current turn number"]
     max_turns: Annotated[int, "Maximum number of turns allowed"]
@@ -15,7 +15,7 @@ class ShellcheckState(TypedDict):
     script: str | None
 
 
-class ShellcheckUpdate(TypedDict):
+class ShellcheckUpdate(TypedDict, total=False):
     initialize: ShellcheckState
     model: ShellcheckState
     process_output: ShellcheckState

@@ -7,12 +7,12 @@ from inference.src.async_bash_executor import CommandExecutionResult
 from inference.src.utils.messages_info import MessageInfo
 
 
-class MultiAttemptState(TypedDict):
+class MultiAttemptState(TypedDict, total=False):
     messages: Annotated[Sequence[BaseMessage], add]
     turn: int
 
 
-class MultiAttemptUpdate(TypedDict):
+class MultiAttemptUpdate(TypedDict, total=False):
     initialize: MultiAttemptState
     model: MultiAttemptState
     next_turn: MultiAttemptState

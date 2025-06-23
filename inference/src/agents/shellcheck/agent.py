@@ -49,7 +49,7 @@ class ShellcheckAgent(BaseEnvSetupAgent[ShellcheckState, ShellcheckUpdate, Shell
             return {"messages": kwargs["messages"]}
         return {}
 
-    def process_update_for_trajectory(self, update: ShellcheckUpdate, *args, **kwargs) -> ShellcheckTrajectoryEntry:
+    def process_update_for_trajectory(self, update: ShellcheckUpdate, *args, **kwargs) -> ShellcheckTrajectoryEntry:  # type: ignore[override]
         node = "unknown"
         messages = []
         commands = []
