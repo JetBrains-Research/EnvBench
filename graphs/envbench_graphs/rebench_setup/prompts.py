@@ -183,4 +183,4 @@ eval "$install"
 echo "Installation completed successfully."
 ```
 
-Base your reasoning on all provided files and return both the JSON and bash script in the exact format shown above.""" 
+Base your reasoning on all provided files and return both the JSON and bash script in the exact format shown above."""

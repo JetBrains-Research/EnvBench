@@ -1,4 +1,4 @@
-from typing import List, Optional, TypeVar, Generic, Callable, Any
+from typing import Callable, Generic, List, Optional, TypeVar
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
@@ -10,7 +10,7 @@ from ..base import BaseEnvSetupAgent
 from .state_schema import VerlAgentTrajectoryEntry, VerlAgentUpdate
 
 # Generic type for state
-StateType = TypeVar('StateType')
+StateType = TypeVar("StateType")
 
 
 def extract_bash_script(text: str) -> Optional[str]:
@@ -18,7 +18,7 @@ def extract_bash_script(text: str) -> Optional[str]:
     import re
 
     # Look for bash code blocks
-    bash_match = re.search(r'```bash(.*?)```', text, re.DOTALL)
+    bash_match = re.search(r"```bash(.*?)```", text, re.DOTALL)
     if bash_match:
         return bash_match.group(1).strip()
     return None

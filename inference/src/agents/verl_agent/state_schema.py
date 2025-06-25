@@ -1,4 +1,4 @@
-from typing import List, TypedDict, Any
+from typing import List, TypedDict
 
 from inference.src.async_bash_executor import CommandExecutionResult
 from inference.src.utils.messages_info import MessageInfo
@@ -14,4 +14,4 @@ class VerlAgentTrajectoryEntry(TypedDict, total=False):
     node: str
     messages: List[MessageInfo]
     commands: List[CommandExecutionResult]
-    timestamp: str 
+    timestamp: str

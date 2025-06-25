@@ -4,7 +4,6 @@ from typing import Optional, Union
 import hydra
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Extra, validator
-from inference.src.agents.verl_agent.agent import VerlAgent
 
 from inference.configs.context_provider_config import EnvSetupInstructionProviderConfig
 from inference.configs.instantiatable_config import InstantiatableConfig
@@ -17,6 +16,7 @@ from inference.src.agents.multi_attempt.agent import MultiAttemptAgent
 from inference.src.agents.procedural.agent import EnvSetupProceduralAgent
 from inference.src.agents.python.agent import EnvSetupPythonAgent
 from inference.src.agents.shellcheck.agent import ShellcheckAgent
+from inference.src.agents.verl_agent.agent import VerlAgent
 from inference.src.toolkits.base import BaseEnvSetupToolkit
 
 
@@ -132,7 +132,7 @@ class EnvSetupAgentConfig(BaseModel, extra=Extra.allow):
                 instruction_provider=instruction_provider,
                 max_iterations=self.max_iterations,
             )
-        
+
         if self.agent_type == EnvSetupAgentType.verl or self.agent_type == EnvSetupAgentType.verl.value:
             return VerlAgent(
                 model=model,
