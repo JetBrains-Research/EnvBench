@@ -42,8 +42,15 @@ def create_read_only_workflow(
             "messages": [new_message],
         }
 
-    async def call_tools(state: EnvSetupReadOnlyState) -> EnvSetupReadOnlyState:
-        response = await tool_node.ainvoke(state["messages"])
+    async def call_tools(state: EnvSetupReadOnlyState, config: RunnableConfig) -> EnvSetupReadOnlyState:
+        # pass tools_kwargs from state to tool node
+        tools_kwargs = state.get("tools_kwargs", {})
+        if "configurable" in config:
+            config["configurable"]["tools_kwargs"] = tools_kwargs
+        else:
+            config["configurable"] = {"tools_kwargs": tools_kwargs}
+
+        response = await tool_node.ainvoke(state["messages"], config=config)
         return {"messages": response, "turn": state["turn"] + 1}
 
     async def force_submit_shell_script_tool_call(
