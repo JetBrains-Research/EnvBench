@@ -1,0 +1,16 @@
+defaults:
+  - python-bash
+  - _self_
+
+inference:
+  agent:
+    agent_type: verl
+    toolkit: shellcheck
+  data_source:
+    hf:
+      hub_name: JetBrains-Research/envbench-zeroshot-rl
+      configs:
+        - default
+      splits:
+        - train
+        - test

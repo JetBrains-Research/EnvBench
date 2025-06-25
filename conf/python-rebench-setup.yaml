@@ -1,0 +1,11 @@
+defaults:
+  - base-python-verl
+  - _self_
+
+tag: oss/python-rebench-setup
+
+inference:
+  agent:
+    max_iterations: 30
+    graph_partial:
+      _target_: envbench_graphs.rebench_setup.graph.create_rebench_setup_workflow

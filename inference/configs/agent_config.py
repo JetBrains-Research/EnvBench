@@ -1,8 +1,10 @@
 from enum import Enum
 from typing import Optional, Union
 
+import hydra
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Extra, validator
+from inference.src.agents.verl_agent.agent import VerlAgent
 
 from inference.configs.context_provider_config import EnvSetupInstructionProviderConfig
 from inference.configs.instantiatable_config import InstantiatableConfig
@@ -30,9 +32,10 @@ class EnvSetupAgentType(Enum):
     shellcheck = "shellcheck"
     multi_attempt = "multi-attempt"
     readonly = "readonly"
+    verl = "verl"
 
 
-class EnvSetupAgentConfig(BaseModel):
+class EnvSetupAgentConfig(BaseModel, extra=Extra.allow):
     agent_type: EnvSetupAgentType
     """Which agent to instantiate."""
     toolkit: EnvSetupToolkit
@@ -127,6 +130,13 @@ class EnvSetupAgentConfig(BaseModel):
                 toolkit=toolkit,
                 model=model,
                 instruction_provider=instruction_provider,
+                max_iterations=self.max_iterations,
+            )
+        
+        if self.agent_type == EnvSetupAgentType.verl or self.agent_type == EnvSetupAgentType.verl.value:
+            return VerlAgent(
+                model=model,
+                graph_partial=hydra.utils.instantiate(self.graph_partial, _partial_=True),
                 max_iterations=self.max_iterations,
             )
 
