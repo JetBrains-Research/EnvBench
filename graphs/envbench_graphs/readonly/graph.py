@@ -33,6 +33,7 @@ def create_read_only_workflow(
             messages = get_initial_prompt(state, config)
         return {
             "messages": convert_to_messages(messages),
+            "tools_kwargs": state.get("tools_kwargs", [{}]),
             "turn": state.get("turn", 1),
         }
 
@@ -43,7 +44,7 @@ def create_read_only_workflow(
         }
 
     async def call_tools(state: EnvSetupReadOnlyState, config: RunnableConfig) -> EnvSetupReadOnlyState:
-        response = await tool_node.ainvoke(state["messages"])
+        response = await tool_node.ainvoke(state, config)
         return {"messages": response, "turn": state["turn"] + 1}
 
     async def force_submit_shell_script_tool_call(
