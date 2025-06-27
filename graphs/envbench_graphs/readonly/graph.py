@@ -49,7 +49,8 @@ def create_read_only_workflow(
             config["configurable"]["tools_kwargs"] = tools_kwargs
         else:
             config["configurable"] = {"tools_kwargs": tools_kwargs}
-
+        print("[DEBUG] tools_kwargs:", tools_kwargs)
+        print("[DEBUG] config:", config)
         response = await tool_node.ainvoke(state["messages"], config=config)
         return {"messages": response, "turn": state["turn"] + 1}
 
