@@ -1,0 +1,11 @@
+defaults:
+  - base-python-verl
+  - _self_
+
+tag: oss/python-rebench-readonly
+
+inference:
+  agent:
+    max_iterations: 100
+    graph_partial:
+      _target_: envbench_graphs.rebench_readonly.graph.create_rebench_readonly_workflow
