@@ -44,13 +44,13 @@ def create_read_only_workflow(
 
     async def call_tools(state: EnvSetupReadOnlyState, config: RunnableConfig) -> EnvSetupReadOnlyState:
         # pass tools_kwargs from state to tool node
-        tools_kwargs = state.get("tools_kwargs", {})
+        tools_kwargs = state.get("tools_kwargs", [{}])
+        print("[DEBUG] tools_kwargs:", tools_kwargs)
+        tools_kwargs = tools_kwargs[0]
         if "configurable" in config:
             config["configurable"]["tools_kwargs"] = tools_kwargs
         else:
             config["configurable"] = {"tools_kwargs": tools_kwargs}
-        print("[DEBUG] tools_kwargs:", tools_kwargs)
-        print("[DEBUG] config:", config)
         response = await tool_node.ainvoke(state["messages"], config=config)
         return {"messages": response, "turn": state["turn"] + 1}
 
