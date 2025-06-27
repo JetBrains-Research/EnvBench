@@ -4,8 +4,7 @@ from typing import Awaitable, Callable, Optional
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage
 from langchain_core.messages.utils import convert_to_messages
-from langgraph.graph.graph import CompiledGraph
-from langgraph.graph.state import END, StateGraph
+from langgraph.graph.state import END, CompiledStateGraph, StateGraph
 
 from .state_schema import ShellcheckState
 
@@ -14,7 +13,7 @@ def create_shellcheck_workflow(
     model: BaseChatModel,
     run_shellcheck_func: Callable[[str], Awaitable[str]],
     max_iterations: Optional[int] = 2,
-) -> CompiledGraph:
+) -> CompiledStateGraph:
     """Create a compiled workflow graph for shellcheck operations.
 
     Args:

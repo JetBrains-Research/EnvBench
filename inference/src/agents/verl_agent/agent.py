@@ -2,7 +2,7 @@ from typing import Callable, Generic, List, Optional, TypeVar
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from ...async_bash_executor import CommandExecutionResult
 from ...utils import message_to_info
@@ -28,7 +28,7 @@ class VerlAgent(BaseEnvSetupAgent[StateType, VerlAgentUpdate, VerlAgentTrajector
     def __init__(
         self,
         model: BaseChatModel,
-        graph_partial: Callable[[BaseChatModel], CompiledGraph],
+        graph_partial: Callable[[BaseChatModel], CompiledStateGraph],
         max_iterations: Optional[int] = None,
     ):
         self.model = model
@@ -45,7 +45,7 @@ class VerlAgent(BaseEnvSetupAgent[StateType, VerlAgentUpdate, VerlAgentTrajector
     def commands_history(self) -> List[CommandExecutionResult]:
         return self._commands_history
 
-    def get_agent(self) -> CompiledGraph:
+    def get_agent(self) -> CompiledStateGraph:
         return self.graph_partial(model=self.model)  # noqa
 
     def construct_initial_state(self, repository: str, revision: str, *args, **kwargs) -> StateType:

@@ -4,7 +4,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMe
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import BaseTool
 from langgraph.graph import StateGraph
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode
 
 from .prompts import get_installamatic_search_prompt
@@ -93,7 +93,7 @@ class InstallamaticSearchGraph:
         return "__end__"
 
     @staticmethod
-    def get_graph(tools: List[BaseTool]) -> CompiledGraph:
+    def get_graph(tools: List[BaseTool]) -> CompiledStateGraph:
         graph = StateGraph(InstallamaticSearchState)
 
         graph.add_node("agent", InstallamaticSearchGraph.agent)

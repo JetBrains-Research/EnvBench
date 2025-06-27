@@ -3,7 +3,7 @@ from typing import List, Optional
 from langchain_core.language_models import BaseChatModel
 from langgraph.constants import END
 from langgraph.graph import StateGraph
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from ...async_bash_executor import CommandExecutionResult
 from ...toolkits.base import BaseEnvSetupToolkit
@@ -76,7 +76,7 @@ class InstallamaticAgent(BaseEnvSetupAgent[InstallamaticState, InstallamaticUpda
     def commands_history(self) -> List[CommandExecutionResult]:
         return self.toolkit.commands_history
 
-    def get_agent(self) -> CompiledGraph:
+    def get_agent(self) -> CompiledStateGraph:
         search_tools = self.toolkit.get_tools(stage="search")
         build_tools = self.toolkit.get_tools(stage="build")
         graph = StateGraph(InstallamaticState)

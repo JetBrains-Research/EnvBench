@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from envbench_graphs.shellcheck import ShellcheckState, create_shellcheck_workflow
 from langchain_core.language_models import BaseChatModel
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from ...async_bash_executor import CommandExecutionResult
 from ...context_providers.build_instructions import EnvSetupInstructionProvider
@@ -36,7 +36,7 @@ class ShellcheckAgent(BaseEnvSetupAgent[ShellcheckState, ShellcheckUpdate, Shell
     def commands_history(self) -> List[CommandExecutionResult]:
         return self._resulting_commands
 
-    def get_agent(self) -> CompiledGraph:
+    def get_agent(self) -> CompiledStateGraph:
         assert isinstance(self.toolkit, ShellcheckToolkit)
         return create_shellcheck_workflow(
             model=self.model,

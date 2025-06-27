@@ -3,7 +3,7 @@ from typing import List, Optional
 from envbench_graphs.readonly import EnvSetupReadOnlyState, create_read_only_workflow
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from ...async_bash_executor import CommandExecutionResult
 from ...context_providers.build_instructions import EnvSetupInstructionProvider
@@ -41,8 +41,8 @@ class EnvSetupReadOnlyAgent(
             return [CommandExecutionResult(command=self._script, exit_code=None)]
         return []
 
-    def get_agent(self) -> CompiledGraph:
-        execute_tools = self.toolkit.get_tools(stage="execute")
+    def get_agent(self) -> CompiledStateGraph:
+        execute_tools = self.toolkit.get_tools()
         submit_tools = self.toolkit.get_tools(stage="submit")
         return create_read_only_workflow(
             model=self.model,

@@ -4,7 +4,7 @@ from typing import List, Literal, Optional, TypedDict
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from langgraph.graph import END, StateGraph
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from ...async_bash_executor import CommandExecutionResult
 from ...context_providers.build_instructions import EnvSetupInstructionProvider
@@ -95,7 +95,7 @@ class EnvSetupProceduralAgent(
     def commands_history(self) -> List[CommandExecutionResult]:
         return self._resulting_commands
 
-    def get_agent(self) -> CompiledGraph:
+    def get_agent(self) -> CompiledStateGraph:
         workflow = StateGraph(EnvSetupProceduralState)
 
         # Add nodes

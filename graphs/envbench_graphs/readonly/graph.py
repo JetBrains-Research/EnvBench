@@ -7,7 +7,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import BaseTool
 from langgraph.constants import END
 from langgraph.graph import StateGraph
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode
 
 from .prompts import get_readonly_prompt
@@ -19,7 +19,7 @@ def create_read_only_workflow(
     tools: List[BaseTool],
     submit_shell_script_tool: BaseTool,
     max_iterations: Optional[int] = None,
-) -> CompiledGraph:
+) -> CompiledStateGraph:
     model = model.bind_tools(tools)
     tool_node = ToolNode(tools)
 

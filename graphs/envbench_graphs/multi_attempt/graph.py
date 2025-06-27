@@ -5,7 +5,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage
 from langchain_core.messages.utils import convert_to_messages
 from langgraph.graph import StateGraph
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from .state_schema import MultiAttemptState
 
@@ -13,7 +13,7 @@ from .state_schema import MultiAttemptState
 def create_multi_attempt_workflow(
     model: BaseChatModel,
     max_iterations: Optional[int] = None,
-) -> CompiledGraph:
+) -> CompiledStateGraph:
     """Create a compiled multi-attempt workflow graph.
 
     Args:

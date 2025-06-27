@@ -5,8 +5,7 @@ from typing import Awaitable, Callable, Dict, Optional
 import aiohttp
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage
-from langgraph.graph.graph import CompiledGraph
-from langgraph.graph.state import END, StateGraph
+from langgraph.graph.state import END, CompiledStateGraph, StateGraph
 
 from .prompts import GENERATE_SETUP_PROMPT, LIST_FILES_PROMPT
 from .state_schema import RebenchSetupState
@@ -122,7 +121,7 @@ def create_rebench_setup_workflow(
     model: BaseChatModel,
     file_selection_model: Optional[BaseChatModel] = None,
     execute_bash_command: Optional[Callable[[str, str], Awaitable[Dict[str, str]]]] = None,
-) -> CompiledGraph:
+) -> CompiledStateGraph:
     """Create a compiled workflow graph for rebench-setup operations."""
 
     if execute_bash_command is None:

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from inference.src.async_bash_executor import CommandExecutionResult
 
@@ -24,7 +24,7 @@ class BaseEnvSetupAgent(ABC, Generic[GraphState, StateUpdate, TrajectoryEntry]):
     def commands_history(self) -> List[CommandExecutionResult]: ...
 
     @abstractmethod
-    def get_agent(self) -> CompiledGraph: ...
+    def get_agent(self) -> CompiledStateGraph: ...
 
     @abstractmethod
     def construct_initial_state(self, repository: str, revision: str, *args, **kwargs) -> GraphState: ...

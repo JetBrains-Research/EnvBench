@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from langchain_core.language_models import BaseChatModel
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import create_react_agent
 
 from ...async_bash_executor import CommandExecutionResult
@@ -36,7 +36,7 @@ class EnvSetupPythonAgent(BaseEnvSetupAgent[EnvSetupPythonState, EnvSetupPythonU
     def commands_history(self) -> List[CommandExecutionResult]:
         return self.toolkit.commands_history
 
-    def get_agent(self) -> CompiledGraph:
+    def get_agent(self) -> CompiledStateGraph:
         tools = self.toolkit.get_tools()
         return create_react_agent(
             model=self.model, tools=tools, state_schema=EnvSetupPythonState, state_modifier=get_env_setup_python_prompt

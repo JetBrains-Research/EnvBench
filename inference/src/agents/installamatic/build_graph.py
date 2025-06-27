@@ -5,7 +5,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import BaseTool
 from langgraph.constants import END
 from langgraph.graph import StateGraph
-from langgraph.graph.graph import CompiledGraph
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode
 
 from .prompts import get_installamatic_build_prompt, get_installamatic_generate_shell_script_prompt
@@ -127,7 +127,7 @@ class InstallamaticBuildGraph:
         return "force_submit_summary_call"
 
     @staticmethod
-    def get_graph(tools: List[BaseTool]) -> CompiledGraph:
+    def get_graph(tools: List[BaseTool]) -> CompiledStateGraph:
         graph = StateGraph(InstallamaticBuildState)
 
         graph.add_node("init_state", InstallamaticBuildGraph.init_state)
