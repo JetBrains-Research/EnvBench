@@ -13,14 +13,11 @@ contain information about:
 * Dependencies or requirements
 * Setup procedures
 * Development environment configuration
-* Testing setup
 Think step by step:
 * Identify README files, as they often contain installation instructions.
 * Look for setup.py, pyproject.toml, requirements.txt, environment.yml.
 * Consider files in directories like \\texttt{{docs}} that might contain
 installation guides.
-* Look for test configuration files that might help understand how to run
-tests.
 * Consider \\textbf{{only}} files from the list provided above.
 * Prioritize files in the repository root (top-level directory).
 * Only include files from subdirectories if they are clearly relevant to
@@ -48,8 +45,6 @@ following JSON format:
 "python": "3.9",
 "packages": "requirements.txt",
 "install": "pip install -e .[dev]",
-"test_cmd": "pytest --no-header -rA --tb=line --color=no -p no:
-cacheprovider -W ignore::DeprecationWarning",
 "pre_install": ["apt-get update", "apt-get install -y gcc"],
 "reqs_path": ["requirements/base.txt"],
 "env_yml_path": ["environment.yml"],
@@ -73,7 +68,6 @@ else:
 pip install <packages>
 pip install <pip_packages>
 bash <install>
-bash <test_cmd>
 ```
 **IMPORTANT:**
 * For the "install" field, always use local install commands like pip
@@ -88,12 +82,10 @@ reqs_path.
 * Add relevant test frameworks to pip_packages (e.g., pytest, nose).
 * Use -y in all conda commands.
 * Prefer direct and specific pytest commands over general wrappers.
-* Avoid test commands with placeholders like {{test_name}}.
-* If a Makefile runs tests, extract the actual test command (e.g., pytest)
-.
-You must ensure the final JSON includes required fields (, install,
-test_cmd), and optionally packages, pre_install, reqs_path,
-env_yml_path, pip_packages if relevant.
+* Focus ONLY on environment setup - do not include any test commands
+You must ensure the final JSON includes required fields (python, install),
+and optionally packages, pre_install, reqs_path, env_yml_path,
+pip_packages if relevant.
 
 **CRITICAL: After providing the JSON, you MUST generate a complete bash script that implements the installation recipe described above. The bash script should:**
 
@@ -104,8 +96,9 @@ env_yml_path, pip_packages if relevant.
 5. Execute the pre_install commands if present
 6. Install dependencies based on the packages field
 7. Run the install command
+8. Do NOT run any test commands - only set up the environment
 
-Return your response in this format. Replace the JSON and bash script placeholders with the actual content:
+Return your response in this format. Replace the JSON and bash script EXAMPLES with the actual content:
 ```json
 {{
   "python": "3.9",
@@ -122,7 +115,7 @@ Return your response in this format. Replace the JSON and bash script placeholde
 #!/bin/bash
 set -e
 
-# TODO: replace with your actual data
+# TODO: replace examples with your actual data
 python="3.9"
 packages="requirements.txt"
 install="pip install -e .[dev]"
@@ -180,7 +173,7 @@ fi
 # Run install command
 echo "Running install command: $install"
 eval "$install"
-echo "Installation completed successfully."
+echo "Environment setup completed successfully."
 ```
 
 Base your reasoning on all provided files and return both the JSON and bash script in the exact format shown above."""

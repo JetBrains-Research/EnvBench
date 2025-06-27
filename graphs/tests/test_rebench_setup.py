@@ -1,7 +1,8 @@
-from envbench_graphs.rebench_setup.graph import create_rebench_setup_workflow
 from langchain_core.language_models import FakeListChatModel
 from langchain_core.messages import HumanMessage
 import pytest
+
+from envbench_graphs.rebench_setup.graph import create_rebench_setup_workflow
 
 
 @pytest.mark.asyncio
