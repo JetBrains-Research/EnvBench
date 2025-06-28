@@ -1,13 +1,11 @@
 from typing import Awaitable, Callable, Dict, Optional
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, RemoveMessage
 from langchain_core.tools import tool
 from langgraph.graph.state import END, StateGraph, CompiledStateGraph
 from langgraph.prebuilt import create_react_agent
-from langgraph.types import Send
 
-from envbench_graphs.rebench_readonly import RebenchReadonlyState
 from envbench_graphs.rebench_setup.graph import default_execute_bash_command
 
 from .prompts import (
@@ -66,13 +64,12 @@ def create_rebench_readonly_workflow(
             "tools_kwargs": state.get("tools_kwargs", {}),
         }
 
-    def limit_turns(state: RebenchReadonlyState) -> Send | RebenchReadonlyState:
-        """Pre-model hook to limit the number of turns for the ReAct agent."""
+    def limit_turns(state: RebenchReadonlyState) -> RebenchReadonlyState:
+        """Post-model hook to limit the number of turns for the ReAct agent."""
         ai_messages = [msg for msg in state["messages"] if isinstance(msg, AIMessage)]
         if len(ai_messages) >= max_turns:
             stop_message = AIMessage(content="Sorry, need more steps to process this request.")
-            new_state = state | {"messages": state["messages"] + [stop_message]}
-            return Send(END, new_state)
+            return state | {"messages": [RemoveMessage(id=state["messages"][-1].id), stop_message]}
         return state
 
     # Create bash command tool
@@ -90,7 +87,7 @@ def create_rebench_readonly_workflow(
         """Start the exploration with the ReAct agent."""
         # Create the ReAct agent with the bash tool
         bash_tool = create_bash_tool(state)
-        agent = create_react_agent(model=exploration_model, tools=[bash_tool], pre_model_hook=limit_turns)
+        agent = create_react_agent(model=exploration_model, tools=[bash_tool], post_model_hook=limit_turns)
 
         # Run the agent with existing messages
         result = await agent.ainvoke(state)
