@@ -3,8 +3,7 @@ from typing import Awaitable, Callable, Dict, Optional
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.tools import tool
-from langgraph.graph.graph import CompiledGraph
-from langgraph.graph.state import END, StateGraph
+from langgraph.graph.state import END, StateGraph, CompiledStateGraph
 from langgraph.prebuilt import create_react_agent
 
 from envbench_graphs.rebench_setup.graph import default_execute_bash_command
@@ -34,7 +33,7 @@ def create_rebench_readonly_workflow(
     entrypoint_node: str = "initialize",
     execute_bash_command: Optional[Callable[[str, str], Awaitable[Dict[str, str]]]] = None,
     max_length: int = 8000,
-) -> CompiledGraph:
+) -> CompiledStateGraph:
     """
     Create a compiled workflow graph for rebench-readonly operations.
 
