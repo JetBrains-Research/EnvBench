@@ -67,7 +67,7 @@ def create_rebench_readonly_workflow(
     def limit_turns(state: RebenchReadonlyState) -> RebenchReadonlyState:
         """Post-model hook to limit the number of turns for the ReAct agent."""
         ai_messages = [msg for msg in state["messages"] if isinstance(msg, AIMessage)]
-        if len(ai_messages) >= max_turns:
+        if len(ai_messages) > max_turns:
             stop_message = AIMessage(content="Sorry, need more steps to process this request.")
             return state | {"messages": [RemoveMessage(id=state["messages"][-1].id), stop_message]}
         return state
