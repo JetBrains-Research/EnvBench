@@ -1,7 +1,14 @@
 from pathlib import Path
 from textwrap import dedent
 from typing import List
-import urllib.request
+
+import requests
+
+try:
+    from importlib.resources import files
+except ImportError:
+    # Fallback for Python < 3.9
+    from importlib_resources import files  # type: ignore
 
 from langchain_core.messages import BaseMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -10,22 +17,28 @@ from .state_schema import EnvSetupReadOnlyState
 
 
 def get_dockerfile_content() -> str:
-    """Get Dockerfile content from GitHub or local fallback."""
-    # Try GitHub first
-    github_urls = ["https://raw.githubusercontent.com/JetBrains-Research/EnvBench/main/dockerfiles/python.Dockerfile"]
+    """Get Dockerfile content from package data, local file, or GitHub fallback."""
+    # Try package resources first (when installed as package)
+    try:
+        dockerfile_text = files("envbench_graphs").joinpath("python.Dockerfile").read_text()
+        return dockerfile_text
+    except Exception:
+        pass
 
-    for url in github_urls:
-        try:
-            with urllib.request.urlopen(url, timeout=10) as response:
-                return response.read().decode("utf-8")
-        except Exception:
-            continue
-
-    # Fallback to local file if GitHub fails and file exists
+    # Try local file (for development)
     try:
         dockerfile_path = Path(__file__).parents[3] / "dockerfiles" / "python.Dockerfile"
         if dockerfile_path.exists():
             return dockerfile_path.read_text()
+    except Exception:
+        pass
+
+    # Fallback to GitHub if local file fails
+    github_url = "https://raw.githubusercontent.com/JetBrains-Research/EnvBench/main/dockerfiles/python.Dockerfile"
+
+    try:
+        response = requests.get(github_url)
+        return response.text
     except Exception:
         pass
 
