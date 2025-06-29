@@ -54,3 +54,4 @@ logging_dir: trajectories_python_installamatic_gpt-4o-mini_2025-02-03
 max_concurrent: 16
 rewrite_trajectories: true
 global_timeout: 1800
+debug_limit: null

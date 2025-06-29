@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "envbench-graphs"
-version = "0.0.1"
+version = "0.0.2"
 description = "LangGraph implementations for environment setup workflows from EnvBench."
 readme = "README.md"
 requires-python = ">=3.10,<4.0"

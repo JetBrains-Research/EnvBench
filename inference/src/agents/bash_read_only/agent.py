@@ -73,15 +73,16 @@ class EnvSetupReadOnlyAgent(
             # Extract commands from toolkit history if available
             if hasattr(self, "toolkit") and self.toolkit.commands_history:
                 commands = self.toolkit.commands_history[-1:] if self.toolkit.commands_history else []
-        elif "force_submit_shell_script_tool_call" in update:
-            node = "force_submit_shell_script_tool_call"
-            messages = update["force_submit_shell_script_tool_call"].get("messages", [])
-        elif "submit_shell_script" in update:
-            node = "submit_shell_script"
-            messages = update["submit_shell_script"].get("messages", [])
+        elif "force_submit_shell_script_tool_call" in update or "submit_shell_script" in update:
+            node = (
+                "force_submit_shell_script_tool_call"
+                if "force_submit_shell_script_tool_call" in update
+                else "submit_shell_script"
+            )
+            messages = update[node].get("messages", [])
             # Extract shell script if available in the state
-            if "shell_script" in update["submit_shell_script"]:
-                shell_script = update["submit_shell_script"]["shell_script"]
+            if "shell_script" in update[node]:
+                shell_script = update[node]["shell_script"]
                 self._script = shell_script
                 if shell_script:
                     command = CommandExecutionResult(command=shell_script, exit_code=None)

@@ -72,6 +72,7 @@ inference:
   logging_dir: ${tmp_dir}/trajectories-${run_name}
   max_concurrent: ${inference_workers}
   rewrite_trajectories: true
+  debug_limit: null
 scripts_processing:
   input_trajectories_dir: ${run_name}
 evaluation:

@@ -120,26 +120,28 @@ async def run_experiment(cfg: DictConfig):
             if messages and messages[-1]["node"] == "commands_history":
                 processed_trajectories.append({"repository": repository, "revision": revision})
 
-        coroutines = [
-            process_single_datapoint(
-                config=cfg_model,
-                repository=example["repository"],
-                revision=example["revision"],
-                extra_info={key: value for key, value in example.items() if key not in ["repository", "revision"]},
-            )
+        examples_to_process = [
+            example
             for example in data_source
             if {"repository": example["repository"], "revision": example["revision"]} not in processed_trajectories
         ]
     else:
-        coroutines = [
-            process_single_datapoint(
-                config=cfg_model,
-                repository=example["repository"],
-                revision=example["revision"],
-                extra_info={key: value for key, value in example.items() if key not in ["repository", "revision"]},
-            )
-            for example in data_source
-        ]
+        examples_to_process = list(data_source)
+
+    # for debugging: limit to a specified number
+    if cfg_model.debug_limit is not None and cfg_model.debug_limit > 0:
+        examples_to_process = examples_to_process[: cfg_model.debug_limit]
+        logging.info(f"Debug mode: limiting to first {cfg_model.debug_limit} examples")
+
+    coroutines = [
+        process_single_datapoint(
+            config=cfg_model,
+            repository=example["repository"],
+            revision=example["revision"],
+            extra_info={key: value for key, value in example.items() if key not in ["repository", "revision"]},
+        )
+        for example in examples_to_process
+    ]
 
     logging.info(f"Got {len(coroutines)} repositories to process.")
 

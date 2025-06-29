@@ -52,3 +52,4 @@ log_trajectory: true
 logging_dir: trajectories_jvm_react_gpt-4o_2025-02-01
 max_concurrent: 16
 rewrite_trajectories: true
+debug_limit: null

@@ -34,3 +34,5 @@ class EnvSetupRunnerConfig(BaseModel):
     """Set to True to process all data points regardless of whether they are already present in `logging_dir`,
       False to exclude those for which trajectories are already available."""
     global_timeout: Optional[int] = None
+    debug_limit: Optional[int] = None
+    """Set to a positive integer to limit the number of examples to process for debugging purposes."""

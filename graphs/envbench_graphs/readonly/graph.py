@@ -9,6 +9,7 @@ from langgraph.constants import END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode
+from langgraph.pregel import RetryPolicy
 
 from .prompts import get_readonly_prompt
 from .state_schema import EnvSetupReadOnlyState
@@ -19,6 +20,7 @@ def create_read_only_workflow(
     tools: List[BaseTool],
     submit_shell_script_tool: BaseTool,
     max_iterations: Optional[int] = None,
+    max_retry_attempts: int = 3,
 ) -> CompiledStateGraph:
     model = model.bind_tools(tools)
     tool_node = ToolNode(tools)
@@ -72,15 +74,28 @@ def create_read_only_workflow(
 
         response = await model_w_submit_shell_script_tool.ainvoke(messages, config=config)
 
-        return {"messages": [response]}
+        shell_script = _parse_shell_script(response)
+
+        if not shell_script:
+            raise ValueError("submit_shell_script tool call not found in model response.")
+
+        return {"messages": [response], "shell_script": shell_script}
+
+    def _parse_shell_script(message: BaseMessage) -> Optional[str]:
+        if isinstance(message, AIMessage) and message.tool_calls:
+            for tool_call in message.tool_calls:
+                if tool_call["name"] == "submit_shell_script":
+                    return tool_call["args"]["script"]
+        return None
 
     async def submit_shell_script(state: EnvSetupReadOnlyState, config: RunnableConfig) -> EnvSetupReadOnlyState:
         messages = state.get("messages", [])
-        if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
-            last_message = messages[-1]
-            for tool_call in last_message.tool_calls:
-                if tool_call["name"] == "submit_shell_script":
-                    return {"shell_script": tool_call["args"]["script"]}
+        try:
+            shell_script = _parse_shell_script(messages[-1])
+            if shell_script:
+                return {"shell_script": shell_script}
+        except Exception as e:
+            raise ValueError("submit_shell_script expects submit_shell_script tool call in the last message.") from e
 
         raise ValueError("submit_shell_script expects submit_shell_script tool call in the last message.")
 
@@ -113,13 +128,16 @@ def create_read_only_workflow(
     graph.add_node("model", call_model)
 
     graph.add_node("tools", call_tools)
-    graph.add_node("force_submit_shell_script_tool_call", force_submit_shell_script_tool_call)
+    graph.add_node(
+        "force_submit_shell_script_tool_call",
+        force_submit_shell_script_tool_call,
+        retry_policy=RetryPolicy(retry_on=ValueError, max_attempts=max_retry_attempts),
+    )
     graph.add_node("submit_shell_script", submit_shell_script)
 
     graph.set_entry_point("init_state")
     graph.add_edge("init_state", "model")
     graph.add_conditional_edges("model", route_after_call_model)
     graph.add_edge("tools", "model")
-    graph.add_edge("force_submit_shell_script_tool_call", "submit_shell_script")
-    graph.add_edge("submit_shell_script", END)
+    graph.add_edge("force_submit_shell_script_tool_call", END)
     return graph.compile()
