@@ -30,6 +30,7 @@ dev = [
     "pyright>=1.1.367",
     "isort>=5.13.2",
     "pytest-asyncio>=0.25.3",
+    "pyppeteer>=2.0.0",
 ]
 
 [project.scripts]
