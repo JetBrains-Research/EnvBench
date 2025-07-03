@@ -1,0 +1,11 @@
+defaults:
+  - python-bash
+  - _self_
+
+tag: oss/python-readonly-v2
+
+inference:
+  agent:
+    agent_type: readonly_v2
+    toolkit: readonly
+    max_iterations: 5

@@ -109,6 +109,10 @@ def create_graph_for_module(module_name: str):
                 model=model, tools=tools, submit_shell_script_tool=dummy_submit_shell_script_tool, max_iterations=3
             )
 
+        elif module_name == "readonly_v2":
+            tools = [DummyTool()]
+            graph = create_func(model=model, tools=tools)
+
         elif module_name == "multi_attempt":
             graph = create_func(model=model, max_iterations=2)
 

@@ -74,7 +74,12 @@ system_prompt = dedent(
     - Where the configuration files for installing the dependencies are located.
     - Optional dependency groups and extras in the configuration files (in the final shell script, you will need to install all of them).
 
-    Once you gathered the information you need, use `submit_shell_script` tool to submit the final shell script that will install the dependencies.
+    Once you gathered the information you need, submit the final shell script using the following format:
+
+    ```bash
+    # Your shell script here
+    # Install dependencies, configure environment, etc.
+    ```
 
     Remember:
     - You can only execute READ operations. Any attempt to execute WRITE operations will result in an error.
