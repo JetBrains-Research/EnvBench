@@ -11,8 +11,9 @@ from .state_schema import ShellcheckState
 
 def create_shellcheck_workflow(
     model: BaseChatModel,
-    run_shellcheck_func: Callable[[str], Awaitable[str]],
+    run_shellcheck_func: Callable[..., Awaitable[str]],
     max_iterations: Optional[int] = 2,
+    pass_state: bool = False,
 ) -> CompiledStateGraph:
     """Create a compiled workflow graph for shellcheck operations.
 
@@ -20,6 +21,7 @@ def create_shellcheck_workflow(
         model: The language model to use for generating responses
         run_shellcheck_func: An async function that takes a script string and returns shellcheck results
         max_iterations: Maximum number of iterations before stopping
+        pass_state: Whether to pass the state to the run_shellcheck_func as a second argument
 
     Returns:
         A compiled graph ready for execution
@@ -55,7 +57,11 @@ def create_shellcheck_workflow(
             return state
 
         script = state["script"] or ""
-        result = await run_shellcheck_func(script)
+        
+        if pass_state:
+            result = await run_shellcheck_func(script, state)
+        else:
+            result = await run_shellcheck_func(script)
 
         return {"messages": [HumanMessage(content=result)], "turn": state["turn"] + 1}
 
@@ -67,6 +73,7 @@ def create_shellcheck_workflow(
             "messages": convert_to_messages(state["messages"]),
             "should_continue": None,
             "script": None,
+            "tools_kwargs": state.get("tools_kwargs", {}),
         }
 
     def call_model(state: ShellcheckState) -> ShellcheckState:
