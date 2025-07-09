@@ -39,7 +39,7 @@ class EnvSetupJVMAgent(BaseEnvSetupAgent[EnvSetupJVMState, EnvSetupJVMUpdate, En
     def get_agent(self) -> CompiledStateGraph:
         tools = self.toolkit.get_tools()
         return create_react_agent(
-            model=self.model, tools=tools, state_schema=EnvSetupJVMState, state_modifier=get_env_setup_jvm_prompt
+            model=self.model, tools=tools, state_schema=EnvSetupJVMState, prompt=get_env_setup_jvm_prompt
         )
 
     def construct_initial_state(self, repository: str, revision: str, *args, **kwargs) -> EnvSetupJVMState:
