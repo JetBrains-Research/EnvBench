@@ -39,7 +39,7 @@ class EnvSetupPythonAgent(BaseEnvSetupAgent[EnvSetupPythonState, EnvSetupPythonU
     def get_agent(self) -> CompiledStateGraph:
         tools = self.toolkit.get_tools()
         return create_react_agent(
-            model=self.model, tools=tools, state_schema=EnvSetupPythonState, state_modifier=get_env_setup_python_prompt
+            model=self.model, tools=tools, state_schema=EnvSetupPythonState, prompt=get_env_setup_python_prompt
         )
 
     def construct_initial_state(self, repository: str, revision: str, *args, **kwargs) -> EnvSetupPythonState:

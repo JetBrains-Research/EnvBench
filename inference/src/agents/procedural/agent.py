@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Literal, Optional, TypedDict
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import BaseMessage
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
@@ -70,22 +70,21 @@ class EnvSetupProceduralAgent(
         """Node that generates the script using the LLM."""
         prompt_func = get_python_setup_prompt if self.language == "python" else get_jvm_setup_prompt
         prompt = prompt_func(state)
-        # print(prompt)
-        message = HumanMessage(prompt)
-        # response = await self.model.ainvoke([message])
-        # script = response.content
-        #
-        # # Extract the script from the bash code block
-        # if "```bash" in script and "```" in script:
-        #     bash_script = script.split("```bash", 1)[1].split("```", 1)[0].strip()
-        #     # Store the entire script as a single command
-        #     self._resulting_commands = [CommandExecutionResult(command=bash_script, exit_code=None)]
-        # else:
-        #     self._resulting_commands = []
+        print(prompt)
+        response = await self.model.ainvoke(prompt)
+        script = response.content
+
+        # Extract the script from the bash code block
+        if "```bash" in script and "```" in script:
+            bash_script = script.split("```bash", 1)[1].split("```", 1)[0].strip()
+            # Store the entire script as a single command
+            self._resulting_commands = [CommandExecutionResult(command=bash_script, exit_code=None)]
+        else:
+            self._resulting_commands = []
 
         res = state.copy()
-        res["messages"] = [message]
-        res["script"] = ""
+        res["messages"] = [response]
+        res["script"] = script
         return res
 
     @property
