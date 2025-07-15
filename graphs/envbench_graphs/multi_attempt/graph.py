@@ -3,7 +3,6 @@ from typing import Literal, Optional
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage
-from langchain_core.messages.utils import convert_to_messages
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
@@ -28,7 +27,6 @@ def create_multi_attempt_workflow(
     def initialize_state(state: MultiAttemptState) -> MultiAttemptState:
         """Initialize the state with default values if not present."""
         return {
-            "messages": convert_to_messages(state.get("messages", [])),
             "turn": state.get("turn", 1),
         }
 

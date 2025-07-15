@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from envbench_graphs.multi_attempt import MultiAttemptState, create_multi_attempt_workflow
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, convert_to_messages
 from langgraph.graph.state import CompiledStateGraph
 
 from ...async_bash_executor import CommandExecutionResult
@@ -71,6 +71,7 @@ class MultiAttemptAgent(BaseEnvSetupAgent[MultiAttemptState, MultiAttemptUpdate,
             node = "next_turn"
             messages = update["next_turn"].get("messages", [])
 
+        messages = convert_to_messages(messages)
         return {
             "timestamp": update["timestamp"],
             "node": node,
