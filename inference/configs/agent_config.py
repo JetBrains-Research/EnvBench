@@ -144,7 +144,7 @@ class EnvSetupAgentConfig(BaseModel, extra=Extra.allow):
                 model=model,
                 instruction_provider=instruction_provider,
                 max_iterations=self.max_iterations,
-                max_script_generation_attempts=self.max_script_generation_attempts
+                max_script_generation_attempts=self.max_script_generation_attempts,
             )
 
         if self.agent_type == EnvSetupAgentType.verl or self.agent_type == EnvSetupAgentType.verl.value:

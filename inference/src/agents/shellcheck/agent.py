@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from envbench_graphs.shellcheck import ShellcheckState, create_shellcheck_workflow
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import convert_to_messages
 from langgraph.graph.state import CompiledStateGraph
 
 from ...async_bash_executor import CommandExecutionResult
@@ -70,6 +71,7 @@ class ShellcheckAgent(BaseEnvSetupAgent[ShellcheckState, ShellcheckUpdate, Shell
                 command = CommandExecutionResult(command=update["process_output"]["script"], exit_code=None)
                 self._resulting_commands.append(command)
                 commands = [command]
+        messages = convert_to_messages(messages)
         return {
             "timestamp": update["timestamp"],
             "node": node,

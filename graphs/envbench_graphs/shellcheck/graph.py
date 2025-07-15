@@ -3,7 +3,6 @@ from typing import Awaitable, Callable, Optional
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage
-from langchain_core.messages.utils import convert_to_messages
 from langgraph.graph.state import END, CompiledStateGraph, StateGraph
 
 from .state_schema import ShellcheckState
@@ -57,7 +56,7 @@ def create_shellcheck_workflow(
             return state
 
         script = state["script"] or ""
-        
+
         if pass_state:
             result = await run_shellcheck_func(script, state)
         else:
@@ -70,7 +69,6 @@ def create_shellcheck_workflow(
         return {
             "turn": state.get("turn", 0),
             "max_turns": state.get("max_turns", max_iterations),
-            "messages": convert_to_messages(state["messages"]),
             "should_continue": None,
             "script": None,
             "tools_kwargs": state.get("tools_kwargs", {}),
