@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+import traceback
 from typing import Any, Dict
 
 import jsonlines
@@ -62,7 +63,17 @@ class EnvSetupRunner:
         except GraphRecursionError:
             logging.info("Agent stopped due to max iterations.")
         except Exception as e:
-            logging.warning(f"Agent stopped due to an exception: {str(e)}.")
+            logging.error(
+                f"Agent stopped due to an exception for {self.repository}@{self.revision}:\n"
+                f"Exception type: {type(e).__name__}\n"
+                f"Exception message: {str(e)}\n"
+                f"Agent type: {type(self.agent).__name__}\n"
+                f"Agent max_iterations: {self.agent.max_iterations}\n"
+                f"Initial state: {initial_state}\n"
+                f"Graph config: {graph_config}\n"
+                f"Extra info: {self.extra_info}\n"
+                f"Full traceback:\n{traceback.format_exc()}"
+            )
 
         if self.log_trajectory:
             if not isinstance(self.agent, InstallamaticAgent):

@@ -9,3 +9,4 @@ inference:
     agent_type: readonly_v2
     toolkit: readonly
     max_iterations: 5
+    max_script_generation_attempts: 3
