@@ -9,3 +9,8 @@ inference:
     max_iterations: 100
     graph_partial:
       _target_: envbench_graphs.rebench_readonly.graph.create_rebench_readonly_workflow
+      do_summarization: true
+      exploration_model:
+        _target_: langchain_openai.ChatOpenAI
+        model: gpt-4o
+        temperature: 0

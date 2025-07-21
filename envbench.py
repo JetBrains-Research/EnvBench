@@ -300,7 +300,7 @@ def main(cfg: DictConfig) -> None:
                 wandb_run = wandb.init(
                     project=cfg.wandb_project,
                     job_type="inference",
-                    name=f"{cfg.tag} inference",
+                    name=f"{cfg.run_name} inference",
                     config=base_config["inference"],
                 )
             console.print(create_step_header("Inference", 1, "blue"))
@@ -333,7 +333,7 @@ def main(cfg: DictConfig) -> None:
                 wandb_run = wandb.init(
                     project=cfg.wandb_project,
                     job_type="scripts",
-                    name=f"{cfg.tag} scripts",
+                    name=f"{cfg.run_name} scripts",
                 )
             console.print(create_step_header("Processing", 2, "green"))
             run_command_with_progress(
@@ -367,7 +367,7 @@ def main(cfg: DictConfig) -> None:
                 wandb_run = wandb.init(
                     project=str(cfg.wandb_project),
                     job_type="evaluation",
-                    name=f"{cfg.tag} eval",
+                    name=f"{cfg.run_name} eval",
                     config=base_config["evaluation"],
                 )
             console.print(create_step_header("Evaluation", 3, "yellow"))
