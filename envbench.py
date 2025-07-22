@@ -313,15 +313,16 @@ def main(cfg: DictConfig) -> None:
                 data_path=cfg.data_path,
             )
 
-            console.print(Panel("🔍 Generating trajectories visualization...", style="blue", box=ROUNDED))
-            traj_html = generate_trajectories_html_from_hf(
-                traj_dir=f"{cfg.run_name}/trajectories",
-                repo_id=base_config["inference"]["hf"]["repo_id"],
-                no_cache=True,
-            )
-            if cfg.use_wandb:
-                wandb.log({"trajectories_viewer": wandb.Html(traj_html)})
-                wandb_run.finish()
+            # TODO: Uncomment when hf can upload folders again or use local trajectories
+            # console.print(Panel("🔍 Generating trajectories visualization...", style="blue", box=ROUNDED))
+            # traj_html = generate_trajectories_html_from_hf(
+            #     traj_dir=f"{cfg.run_name}/trajectories",
+            #     repo_id=base_config["inference"]["hf"]["repo_id"],
+            #     no_cache=True,
+            # )
+            # if cfg.use_wandb:
+            #     wandb.log({"trajectories_viewer": wandb.Html(traj_html)})
+            #     wandb_run.finish()
 
             # Track artifact
             artifacts.append(("Inference", base_config["inference"]["hf"]["repo_id"], f"{cfg.run_name}/trajectories"))
@@ -341,6 +342,7 @@ def main(cfg: DictConfig) -> None:
                 (
                     base_config["inference"]["hf"]["repo_id"],
                     cfg.run_name,
+                    cfg.inference.logging_dir,  # local path
                 ),
                 "Processing trajectories...",
                 progress,

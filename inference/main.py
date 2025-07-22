@@ -158,9 +158,25 @@ async def run_experiment(cfg: DictConfig):
 
     if cfg_model.hf.upload:
         hf_api = HfApi()
-        hf_api.upload_folder(
-            folder_path=cfg_model.logging_dir,
-            path_in_repo=os.path.join(cfg_model.hf.path_in_repo, "trajectories"),
+        # hf_api.upload_folder(  # failing to upload_folder
+        #     folder_path=cfg_model.logging_dir,
+        #     path_in_repo=os.path.join(cfg_model.hf.path_in_repo, "trajectories"),
+        #     repo_id=cfg_model.hf.repo_id,
+        #     repo_type="dataset",
+        # )
+        import zipfile
+
+        zip_path = os.path.join(cfg_model.logging_dir, "trajectories.zip")
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for root, _, files in os.walk(cfg_model.logging_dir):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    arcname = os.path.relpath(file_path, cfg_model.logging_dir)
+                    zipf.write(file_path, arcname=arcname)
+
+        hf_api.upload_file(
+            path_or_fileobj=zip_path,
+            path_in_repo=os.path.join(cfg_model.hf.path_in_repo, "trajectories.zip"),
             repo_id=cfg_model.hf.repo_id,
             repo_type="dataset",
         )

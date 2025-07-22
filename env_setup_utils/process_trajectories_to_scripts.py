@@ -5,9 +5,9 @@ import os
 import tempfile
 from typing import Any, Dict, List
 
+import jsonlines
 from dotenv import load_dotenv
 from huggingface_hub import hf_hub_download, list_repo_tree, upload_file  # type: ignore[import-untyped]
-import jsonlines
 from tqdm import tqdm  # type: ignore[import-untyped]
 
 load_dotenv()
@@ -98,45 +98,83 @@ def parse_script_from_trajectory(trajectory: List[Dict[str, Any]]) -> str:
     return "\n".join(format_command(command) for command in commands)
 
 
-def process_trajectories_to_scripts(trajectories_dataset: str, input_trajectories_dir: str):
+def process_trajectory_file(file_path: str) -> Dict[str, str]:
+    """Process a single trajectory file and return the script data."""
+    with jsonlines.open(file_path, "r") as reader:
+        trajectory = [line for line in reader]
+    
+    # Extract repository and revision from filename
+    filename = os.path.basename(file_path)
+    if filename.endswith('.jsonl'):
+        filename = filename[:-6]  # Remove .jsonl extension
+    
+    if '@' in filename:
+        repository, revision = filename.split('@', 1)
+    else:
+        logging.warning(f"Could not parse repository and revision from filename: {filename}")
+        repository, revision = filename, "unknown"
+    
+    script = parse_script_from_trajectory(trajectory)
+    if not script:
+        script = parse_installamatic_trajectory(trajectory)
+
+    return {
+        "repository": repository.replace("__", "/"),
+        "revision": revision,
+        "script": script,
+    }
+
+
+def process_trajectories_to_scripts(
+    trajectories_dataset: str, 
+    input_trajectories_dir: str, 
+    local_path: str | None = None
+):
     scripts = []
     with tempfile.TemporaryDirectory() as temp_dir:
-        for trajectory_file in tqdm(
-            list_repo_tree(
-                trajectories_dataset, os.path.join(input_trajectories_dir, "trajectories"), repo_type="dataset"
-            )
-        ):
-            file_path = hf_hub_download(
-                repo_id=trajectories_dataset,
-                filename=trajectory_file.path,
-                repo_type="dataset",
-                local_dir=temp_dir,
-            )
+    
+        if local_path is not None:
+            # Handle local path - treat input_trajectories_dir as the local path
+            trajectories_path = local_path
+            if not os.path.exists(trajectories_path):
+                raise FileNotFoundError(f"Trajectories directory not found: {trajectories_path}")
 
-            with jsonlines.open(file_path, "r") as reader:
-                trajectory = [line for line in reader]
-            repository, revision = os.path.basename(trajectory_file.path[: -len(".jsonl")]).split("@")
-            script = parse_script_from_trajectory(trajectory)
-            if not script:
-                script = parse_installamatic_trajectory(trajectory)
+            # Get all .jsonl files in the trajectories directory
+            trajectory_files = []
+            for root, dirs, files in os.walk(trajectories_path):
+                for file in files:
+                    if file.endswith('.jsonl'):
+                        trajectory_files.append(os.path.join(root, file))
 
-            scripts.append(
-                {
-                    "repository": repository.replace("__", "/"),
-                    "revision": revision,
-                    "script": script,
-                }
-            )
+            for file_path in tqdm(trajectory_files, desc="Processing local trajectories"):
+                scripts.append(process_trajectory_file(file_path))
+        else:
+            # Handle remote HuggingFace dataset
+            for trajectory_file in tqdm(
+                list_repo_tree(
+                    trajectories_dataset, os.path.join(input_trajectories_dir, "trajectories"), repo_type="dataset"
+                )
+            ):
+                file_path = hf_hub_download(
+                    repo_id=trajectories_dataset,
+                    filename=trajectory_file.path,
+                    repo_type="dataset",
+                    local_dir=temp_dir,
+                )
+                scripts.append(process_trajectory_file(file_path))
 
-        with jsonlines.open(f"{temp_dir}/scripts.jsonl", "w") as writer:
+        # Save to temp file for upload
+        upload_file_path = os.path.join(temp_dir, "scripts.jsonl")
+        with jsonlines.open(upload_file_path, "w") as writer:
             writer.write_all(scripts)
-
+        # Common upload logic
         upload_file(
             path_in_repo=os.path.join(input_trajectories_dir, "scripts.jsonl"),
-            path_or_fileobj=f"{temp_dir}/scripts.jsonl",
+            path_or_fileobj=upload_file_path,
             repo_id=trajectories_dataset,
             repo_type="dataset",
         )
+        logging.info(f"Scripts uploaded to HuggingFace dataset: {trajectories_dataset}")
 
 
 if __name__ == "__main__":
@@ -153,9 +191,15 @@ if __name__ == "__main__":
         type=str,
         help="The repository ID of the trajectories dataset.",
     )
+    parser.add_argument(
+        "--local-path",
+        type=str,
+        help="Local path to the trajectories directory. If provided, will process local files instead of downloading from HuggingFace.",
+    )
     args = parser.parse_args()
 
     process_trajectories_to_scripts(
         args.traj_repo_id,
         args.input_trajectories_dir,
+        args.local_path,
     )
