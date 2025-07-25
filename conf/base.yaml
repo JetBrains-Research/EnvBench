@@ -8,7 +8,8 @@ data_path: ${oc.env:DATA_ROOT,${hydra:runtime.cwd}/data}
 
 # Run configuration
 tag: oss/envsetup-python  # Static tag
-run_name: ${tag}_${inference.agent.model.model}_${now:%Y-%m-%d_%H-%M-%S}
+extra_tag: ""
+run_name: ${tag}_${inference.agent.model.model}_${extra_tag}_${now:%Y-%m-%d_%H-%M-%S}
 file_name: ${run_name} # Default config name
 traj_repo_id: JetBrains-Research/EnvBench-trajectories # Trajectories repo on HF
 
