@@ -60,7 +60,7 @@ def generate_config_file(short: str, full_path: str, long: str) -> str:
     content = content.replace('LONG', long)
     
     # Generate filename based on SHORT
-    filename = f"EnvBench_{short}.yaml"
+    filename = f"EnvBench_{long.replace('/', '__')}.yaml"
     filepath = os.path.join(CONFIG_DIR, filename)
     
     # Write the file
