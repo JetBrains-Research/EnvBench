@@ -11,7 +11,7 @@ tag: oss/envsetup-python  # Static tag
 extra_tag: ""
 run_name: ${tag}_${inference.agent.model.model}_${extra_tag}_${now:%Y-%m-%d_%H-%M-%S}
 file_name: ${run_name} # Default config name
-traj_repo_id: JetBrains-Research/EnvBench-trajectories # Trajectories repo on HF
+traj_repo_id: "JetBrains-Research/envbench-rl-trajectories" # Trajectories repo on HF
 
 # WandB configuration
 wandb_project: envsetup-oss  # Default wandb project name
