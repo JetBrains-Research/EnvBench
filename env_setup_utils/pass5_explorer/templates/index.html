@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnvBench Results Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px;
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .search-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .file-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+        
+        .file-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .file-item.selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        .file-item input[type="checkbox"] {
+            margin-right: 15px;
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-path {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .file-meta {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+        
+        .results-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .stats-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .btn-analyze {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .status-passed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-issues {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .progress-container {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .progress {
+            background-color: #f8f9fa !important;
+            border-radius: 8px;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            transition: width 0.3s ease;
+        }
+        
+        .btn-clear {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-clear:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <div class="header">
+                <h1><i class="fas fa-chart-pie"></i> EnvBench Results Explorer</h1>
+                <p class="lead">Explore evaluation results from JetBrains-Research/envbench-rl-trajectories</p>
+            </div>
+            
+            <div class="search-container">
+                <h3><i class="fas fa-search"></i> Search and Select Files</h3>
+                
+                <!-- Cache info and controls -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div id="cacheInfo" class="small text-muted">
+                            <!-- Cache information will be populated here -->
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button id="recacheBtn" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-sync-alt"></i> Recache
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info small">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Don't see your run?</strong> Click the "Recache" button to refresh the file list from the dataset.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" id="searchInput" class="form-control form-control-lg" 
+                               placeholder="Search for results.jsonl files..." autocomplete="off">
+                    </div>
+                    <div class="col-md-2">
+                        <button id="clearBtn" class="btn btn-clear btn-lg w-100">
+                            <i class="fas fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button id="analyzeBtn" class="btn btn-analyze btn-lg w-100" disabled>
+                            <i class="fas fa-chart-bar"></i> Analyze Selected
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Progress bar for analysis -->
+                <div id="analysisProgress" class="progress-container mt-3" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span id="progressText" class="text-muted fw-medium">Processing...</span>
+                        <span id="progressPercent" class="text-muted fw-bold">0%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="file-list mt-3" id="fileList">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading files...
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-container" id="resultsContainer" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3><i class="fas fa-chart-line"></i> Analysis Results</h3>
+                    <button id="exportBtn" class="btn btn-outline-primary">
+                        <i class="fas fa-download"></i> Export as Image
+                    </button>
+                </div>
+                
+                <div id="exportableContent">
+                    <div id="crossRunStats" class="row">
+                        <!-- Cross-run statistics will be inserted here -->
+                    </div>
+                    
+                    <div id="runsTable" class="mt-4">
+                        <!-- Runs table will be inserted here -->
+                    </div>
+                </div>
+                
+                <div id="individualCharts">
+                    <!-- Individual file charts will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedFiles = new Set();
+        let searchTimeout;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFiles();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const recacheBtn = document.getElementById('recacheBtn');
+            const clearBtn = document.getElementById('clearBtn');
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadFiles(this.value);
+                }, 300);
+            });
+
+            analyzeBtn.addEventListener('click', analyzeSelectedFiles);
+            recacheBtn.addEventListener('click', recacheFiles);
+            clearBtn.addEventListener('click', clearAll);
+            
+            // Export button (will be added dynamically)
+            document.addEventListener('click', function(e) {
+                if (e.target.id === 'exportBtn' || e.target.closest('#exportBtn')) {
+                    exportAsImage();
+                }
+            });
+        }
+
+        async function exportAsImage() {
+            const exportBtn = document.getElementById('exportBtn');
+            const originalText = exportBtn.innerHTML;
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+            exportBtn.disabled = true;
+
+            try {
+                const element = document.getElementById('exportableContent');
+                const canvas = await html2canvas(element, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true
+                });
+
+                // Create download link
+                const link = document.createElement('a');
+                link.download = `envbench-results-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+
+            } catch (error) {
+                console.error('Export failed:', error);
+                alert('Export failed. Please try again.');
+            } finally {
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        }
+
+        async function loadFiles(query = '') {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading files...</div>';
+
+            try {
+                const response = await fetch(`/api/search_files?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    fileList.innerHTML = `<div class="loading text-danger">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                const files = data.files || [];
+                displayCacheInfo(data.cache_info, data.total_count, files.length, query);
+                
+                if (files.length === 0) {
+                    fileList.innerHTML = '<div class="loading">No files found</div>';
+                    return;
+                }
+
+                fileList.innerHTML = files.map(file => `
+                    <div class="file-item" data-path="${file.path}">
+                        <input type="checkbox" id="file-${file.path.replace(/[^a-zA-Z0-9]/g, '_')}">
+                        <div class="file-info">
+                            <div class="file-path">${file.path}</div>
+                            <div class="file-meta">
+                                Size: ${formatFileSize(file.size)} | 
+                                Modified: ${formatDate(file.last_modified)}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add event listeners to checkboxes and file items
+                fileList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const filePath = this.closest('.file-item').dataset.path;
+                        if (this.checked) {
+                            selectedFiles.add(filePath);
+                            this.closest('.file-item').classList.add('selected');
+                        } else {
+                            selectedFiles.delete(filePath);
+                            this.closest('.file-item').classList.remove('selected');
+                        }
+                        updateAnalyzeButton();
+                    });
+                });
+
+                // Make whole file item clickable
+                fileList.querySelectorAll('.file-item').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        // Don't trigger if clicking directly on checkbox
+                        if (e.target.type === 'checkbox') return;
+                        
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.dispatchEvent(new Event('change'));
+                    });
+                });
+
+            } catch (error) {
+                fileList.innerHTML = '<div class="loading text-danger">Error loading files</div>';
+                console.error('Error:', error);
+            }
+        }
+
+        function updateAnalyzeButton() {
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            analyzeBtn.disabled = selectedFiles.size === 0;
+        }
+
+        function displayCacheInfo(cacheInfo, totalCount, displayedCount, query) {
+            const cacheInfoDiv = document.getElementById('cacheInfo');
+            
+            if (!cacheInfo || !cacheInfo.exists) {
+                cacheInfoDiv.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> No cache found - click Recache to build cache';
+                return;
+            }
+
+            const ageText = formatAge(cacheInfo.age_seconds);
+            const lastModified = formatDate(cacheInfo.last_modified);
+            
+            let countText = `${totalCount} total files`;
+            if (query && displayedCount !== totalCount) {
+                countText += `, ${displayedCount} matching search`;
+            }
+            
+            cacheInfoDiv.innerHTML = `
+                <i class="fas fa-clock text-success"></i> Cache age: ${ageText} (updated ${lastModified}) | 
+                <i class="fas fa-file-alt text-info"></i> ${countText}
+            `;
+        }
+
+        function formatAge(ageSeconds) {
+            if (ageSeconds < 60) {
+                return `${Math.floor(ageSeconds)} seconds`;
+            } else if (ageSeconds < 3600) {
+                return `${Math.floor(ageSeconds / 60)} minutes`;
+            } else if (ageSeconds < 86400) {
+                return `${Math.floor(ageSeconds / 3600)} hours`;
+            } else {
+                return `${Math.floor(ageSeconds / 86400)} days`;
+            }
+        }
+
+        async function recacheFiles() {
+            const recacheBtn = document.getElementById('recacheBtn');
+            const originalText = recacheBtn.innerHTML;
+            
+            recacheBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Recaching...';
+            recacheBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/clear_cache', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success message briefly
+                    recacheBtn.innerHTML = '<i class="fas fa-check text-success"></i> Done!';
+                    
+                    // Reload files to show updated cache
+                    const searchInput = document.getElementById('searchInput');
+                    await loadFiles(searchInput.value);
+                    
+                    // Reset button after 2 seconds
+                    setTimeout(() => {
+                        recacheBtn.innerHTML = originalText;
+                        recacheBtn.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+                
+            } catch (error) {
+                console.error('Recache error:', error);
+                recacheBtn.innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i> Error';
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    recacheBtn.innerHTML = originalText;
+                    recacheBtn.disabled = false;
+                }, 3000);
+            }
+        }
+
+        function clearAll() {
+            // Clear search input
+            const searchInput = document.getElementById('searchInput');
+            searchInput.value = '';
+            
+            // Clear all selected files
+            selectedFiles.clear();
+            
+            // Uncheck all checkboxes and remove selected styling
+            const fileItems = document.querySelectorAll('.file-item');
+            fileItems.forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+                item.classList.remove('selected');
+            });
+            
+            // Update analyze button state
+            updateAnalyzeButton();
+            
+            // Reload files to show all files (no filter)
+            loadFiles('');
+        }
+
+        function updateProgress(current, total, fileName = '') {
+            const progressContainer = document.getElementById('analysisProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            const percent = Math.round((current / total) * 100);
+            
+            progressBar.style.width = `${percent}%`;
+            progressBar.setAttribute('aria-valuenow', percent);
+            
+            if (fileName) {
+                progressText.textContent = `Processing ${fileName} (${current}/${total})`;
+            } else {
+                progressText.textContent = `Processing file ${current} of ${total}`;
+            }
+            
+            progressPercent.textContent = `${percent}%`;
+            
+            if (current === total) {
+                progressText.textContent = 'Analysis complete!';
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 1500);
+            }
+        }
+
+        function showProgress() {
+            const progressContainer = document.getElementById('analysisProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressBar.setAttribute('aria-valuenow', 0);
+            progressText.textContent = 'Starting analysis...';
+            progressPercent.textContent = '0%';
+        }
+
+        function hideProgress() {
+            const progressContainer = document.getElementById('analysisProgress');
+            progressContainer.style.display = 'none';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Unknown';
+            
+            // Handle fallback date for files without dates
+            if (dateStr === '1900-01-01T00:00:00') return 'No date found';
+            
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return 'Invalid Date';
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } catch (e) {
+                return 'Invalid Date';
+            }
+        }
+
+        async function analyzeSelectedFiles() {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const crossRunStats = document.getElementById('crossRunStats');
+            const individualCharts = document.getElementById('individualCharts');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const originalBtnText = analyzeBtn.innerHTML;
+
+            // Show progress bar and update button
+            showProgress();
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            analyzeBtn.disabled = true;
+
+            resultsContainer.style.display = 'block';
+            crossRunStats.innerHTML = '<div class="loading"><i class="fas fa-chart-line"></i> Preparing analysis...</div>';
+            individualCharts.innerHTML = '';
+
+            try {
+                const selectedFilesArray = Array.from(selectedFiles);
+                const totalFiles = selectedFilesArray.length;
+                
+                // Update progress - starting
+                updateProgress(0, totalFiles + 1, 'Initializing...');
+                
+                // Add small delay to show initial progress
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Update progress - sending request
+                updateProgress(1, totalFiles + 1, 'Sending request...');
+
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        files: selectedFilesArray
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    crossRunStats.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                    hideProgress();
+                    return;
+                }
+
+                // Simulate processing each file for progress display
+                for (let i = 0; i < totalFiles; i++) {
+                    const fileName = selectedFilesArray[i].split('/').pop().replace('.jsonl', '');
+                    updateProgress(i + 2, totalFiles + 1, fileName);
+                    await new Promise(resolve => setTimeout(resolve, 200)); // Small delay for visual effect
+                }
+
+                // Final update
+                updateProgress(totalFiles + 1, totalFiles + 1, 'Generating charts...');
+                
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                displayCrossRunStats(data.cross_run_stats);
+                displayRunsTable(data.file_analyses);
+                displayIndividualCharts(data.file_analyses);
+
+                // Complete the progress
+                updateProgress(totalFiles + 1, totalFiles + 1);
+
+            } catch (error) {
+                crossRunStats.innerHTML = '<div class="alert alert-danger">Error analyzing files: ' + error.message + '</div>';
+                console.error('Error:', error);
+                hideProgress();
+            } finally {
+                // Reset button
+                analyzeBtn.innerHTML = originalBtnText;
+                analyzeBtn.disabled = selectedFiles.size === 0;
+            }
+        }
+
+        function displayCrossRunStats(stats) {
+            const crossRunStats = document.getElementById('crossRunStats');
+            // Determine column size based on number of metrics
+            const hasPass5 = stats.pass_at_5 !== undefined;
+            const colSize = hasPass5 ? 'col-md-2' : 'col-md-3'; // 5 metrics with pass@5, 4 without
+            
+            let statsHtml = `
+                <div class="${colSize}">
+                    <div class="stats-card">
+                        <div class="stats-number">${stats.passed_repos}/${stats.total_repos}</div>
+                        <div class="stats-label">Pass@${stats.k} (${stats.pass_at_k.toFixed(1)}%)</div>
+                    </div>
+                </div>`;
+            
+            // Add pass@5 if available
+            if (hasPass5) {
+                statsHtml += `
+                <div class="${colSize}">
+                    <div class="stats-card">
+                        <div class="stats-number">${stats.pass_at_5_repos}/${stats.total_repos}</div>
+                        <div class="stats-label">Pass@5 (${stats.pass_at_5.toFixed(1)}%)</div>
+                    </div>
+                </div>`;
+            }
+            
+            statsHtml += `
+                <div class="${colSize}">
+                    <div class="stats-card">
+                        <div class="stats-number">${stats.avg_passed_repos || 0}/${stats.total_repos}</div>
+                        <div class="stats-label">Avg Pass@1 (${stats.avg_pass_at_1.toFixed(1)}%)</div>
+                    </div>
+                </div>
+                <div class="${colSize}">
+                    <div class="stats-card">
+                        <div class="stats-number">${stats.avg_errs.toFixed(2)}</div>
+                        <div class="stats-label">AvgErrs</div>
+                    </div>
+                </div>
+            `;
+            
+            crossRunStats.innerHTML = statsHtml;
+        }
+
+        function displayRunsTable(fileAnalyses) {
+            const runsTable = document.getElementById('runsTable');
+            
+            const tableRows = Object.entries(fileAnalyses).map(([filePath, analysis]) => {
+                // Use full path but remove /results.jsonl
+                const runName = filePath.replace('/results.jsonl', '');
+                const total = analysis.total;
+                const passedPct = ((analysis.passed / total) * 100).toFixed(1);
+                const issuesPct = ((analysis.has_issues / total) * 100).toFixed(1);
+                const failedPct = ((analysis.failed / total) * 100).toFixed(1);
+                
+                return `
+                    <tr>
+                        <td style="min-width: 300px; word-break: break-all;">${runName}</td>
+                        <td><span class="status-badge status-passed">${analysis.passed} (${passedPct}%)</span></td>
+                        <td><span class="status-badge status-issues">${analysis.has_issues} (${issuesPct}%)</span></td>
+                        <td><span class="status-badge status-failed">${analysis.failed} (${failedPct}%)</span></td>
+                        <td>${analysis.avg_errs}</td>
+                        <td>${total}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            runsTable.innerHTML = `
+                <h4 class="mb-3">Runs Summary</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Run Name</th>
+                                <th>Passed</th>
+                                <th>Has Issues</th>
+                                <th>Failed</th>
+                                <th>AvgErrs</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function displayIndividualCharts(fileAnalyses) {
+            const individualCharts = document.getElementById('individualCharts');
+            
+            const chartsHtml = Object.entries(fileAnalyses).map(([filePath, analysis]) => {
+                const chartId = `chart-${filePath.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                return `
+                    <div class="col-md-6 mb-4">
+                        <div class="chart-container">
+                            <h5>${filePath.split('/').pop()}</h5>
+                            <div class="row mb-3">
+                                <div class="col-4">
+                                    <span class="status-badge status-passed">${analysis.passed} Passed</span>
+                                </div>
+                                <div class="col-4">
+                                    <span class="status-badge status-issues">${analysis.has_issues} Has Issues</span>
+                                </div>
+                                <div class="col-4">
+                                    <span class="status-badge status-failed">${analysis.failed} Failed</span>
+                                </div>
+                            </div>
+                            <div id="${chartId}"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            individualCharts.innerHTML = `
+                <h4 class="mb-4">Individual Run Results</h4>
+                <div class="row">
+                    ${chartsHtml}
+                </div>
+            `;
+
+            // Create pie charts
+            Object.entries(fileAnalyses).forEach(([filePath, analysis]) => {
+                const chartId = `chart-${filePath.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                createPieChart(chartId, analysis);
+            });
+        }
+
+        function createPieChart(chartId, analysis) {
+            const data = [{
+                values: [analysis.passed, analysis.has_issues, analysis.failed],
+                labels: ['Passed', 'Has Issues', 'Failed'],
+                type: 'pie',
+                marker: {
+                    colors: ['#28a745', '#ffc107', '#dc3545']
+                },
+                textinfo: 'label+percent',
+                textposition: 'outside',
+                hole: 0.4
+            }];
+
+            const layout = {
+                height: 300,
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                showlegend: false
+            };
+
+            Plotly.newPlot(chartId, data, layout);
+        }
+    </script>
+</body>
+</html> 
