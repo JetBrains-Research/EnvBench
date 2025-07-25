@@ -107,6 +107,11 @@ async def run_experiment(cfg: DictConfig):
             shutil.rmtree(cfg_model.logging_dir)
 
     data_source = getattr(cfg_model.data_source, cfg_model.data_source.type).instantiate()
+    if first_n := os.getenv('ONLY_FIRST_N'):
+        n = int(first_n)
+        logging.info(f"Limiting data source to first {n} examples.")
+        from itertools import islice
+        data_source = islice(data_source, n)
     os.makedirs(cfg_model.logging_dir, exist_ok=True)
 
     if not cfg_model.rewrite_trajectories and os.path.exists(cfg_model.logging_dir):
@@ -164,22 +169,25 @@ async def run_experiment(cfg: DictConfig):
         #     repo_id=cfg_model.hf.repo_id,
         #     repo_type="dataset",
         # )
-        import zipfile
 
-        zip_path = os.path.join(cfg_model.logging_dir, "trajectories.zip")
-        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for root, _, files in os.walk(cfg_model.logging_dir):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    arcname = os.path.relpath(file_path, cfg_model.logging_dir)
-                    zipf.write(file_path, arcname=arcname)
-
-        hf_api.upload_file(
-            path_or_fileobj=zip_path,
-            path_in_repo=os.path.join(cfg_model.hf.path_in_repo, "trajectories.zip"),
-            repo_id=cfg_model.hf.repo_id,
-            repo_type="dataset",
-        )
+        print('Skipping uploading folder to HuggingFace, please use `hf upload` command manually.')
+        # import zipfile
+        # TODO: fix
+        #
+        # zip_path = os.path.join(cfg_model.logging_dir, "trajectories.zip")
+        # with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        #     for root, _, files in os.walk(cfg_model.logging_dir):
+        #         for file in files:
+        #             file_path = os.path.join(root, file)
+        #             arcname = os.path.relpath(file_path, cfg_model.logging_dir)
+        #             zipf.write(file_path, arcname=arcname)
+        #
+        # hf_api.upload_file(
+        #     path_or_fileobj=zip_path,
+        #     path_in_repo=os.path.join(cfg_model.hf.path_in_repo, "trajectories.zip"),
+        #     repo_id=cfg_model.hf.repo_id,
+        #     repo_type="dataset",
+        # )
 
         try:
             config_name = hydra.core.config_store.ConfigSource.config_name
