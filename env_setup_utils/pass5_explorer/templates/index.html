@@ -103,14 +103,16 @@
         }
         
         .stats-number {
-            font-size: 2.5em;
+            font-size: 2.2em;
             font-weight: bold;
             margin-bottom: 5px;
+            line-height: 1.2;
         }
         
         .stats-label {
-            font-size: 1.1em;
+            font-size: 1.0em;
             opacity: 0.9;
+            line-height: 1.3;
         }
         
         .chart-container {
@@ -195,6 +197,25 @@
             transform: translateY(-1px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             color: white;
+        }
+        
+        /* Media queries for responsive stats cards */
+        @media (max-width: 768px) {
+            .stats-number {
+                font-size: 1.8em;
+            }
+            .stats-label {
+                font-size: 0.9em;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .stats-number {
+                font-size: 1.5em;
+            }
+            .stats-label {
+                font-size: 0.8em;
+            }
         }
     </style>
 </head>
@@ -681,9 +702,9 @@
 
         function displayCrossRunStats(stats) {
             const crossRunStats = document.getElementById('crossRunStats');
-            // Determine column size based on number of metrics
+            // Determine column size based on number of metrics - now we have more metrics
             const hasPass5 = stats.pass_at_5 !== undefined;
-            const colSize = hasPass5 ? 'col-md-2' : 'col-md-3'; // 5 metrics with pass@5, 4 without
+            const colSize = 'col-lg-2 col-md-3 col-sm-4'; // Responsive columns for more metrics
             
             let statsHtml = `
                 <div class="${colSize}">
@@ -707,14 +728,26 @@
             statsHtml += `
                 <div class="${colSize}">
                     <div class="stats-card">
-                        <div class="stats-number">${stats.avg_passed_repos || 0}/${stats.total_repos}</div>
-                        <div class="stats-label">Avg Pass@1 (${stats.avg_pass_at_1.toFixed(1)}%)</div>
+                        <div class="stats-number">${stats.avg_passed_repos || 0}±${stats.std_passed || 0}</div>
+                        <div class="stats-label">Avg Passed (${stats.avg_pass_at_1.toFixed(1)}%)</div>
                     </div>
                 </div>
                 <div class="${colSize}">
                     <div class="stats-card">
-                        <div class="stats-number">${stats.avg_errs.toFixed(2)}</div>
-                        <div class="stats-label">AvgErrs</div>
+                        <div class="stats-number">${stats.avg_has_issues || 0}±${stats.std_has_issues || 0}</div>
+                        <div class="stats-label">Avg Has Issues</div>
+                    </div>
+                </div>
+                <div class="${colSize}">
+                    <div class="stats-card">
+                        <div class="stats-number">${stats.avg_failed || 0}±${stats.std_failed || 0}</div>
+                        <div class="stats-label">Avg Failed</div>
+                    </div>
+                </div>
+                <div class="${colSize}">
+                    <div class="stats-card">
+                        <div class="stats-number">${stats.avg_errs.toFixed(2)}±${stats.std_avg_errs.toFixed(2)}</div>
+                        <div class="stats-label">Avg Errors</div>
                     </div>
                 </div>
             `;

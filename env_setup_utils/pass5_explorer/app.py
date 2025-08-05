@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # HuggingFace API configuration
-DATASET_NAME = "с"
+DATASET_NAME = "JetBrains-Research/envbench-rl-trajectories"
 hf_api = HfApi()
 fs = HfFileSystem()
 
@@ -288,15 +288,19 @@ def calculate_cross_run_stats(selected_files: List[str]) -> Dict[str, Any]:
     all_repos = set()
     passed_repos = set()
     run_pass_counts = []  # Number of repos that passed in each run
+    run_has_issues_counts = []  # Number of repos with issues in each run
+    run_failed_counts = []  # Number of repos that failed in each run
     run_avg_errs = []  # AvgErrs for each run
     
     for file_path in selected_files:
         results = download_results_file(file_path)
         run_passed = 0  # Count repos that passed in this run
         
-        # Calculate avgErrs for this run
+        # Calculate analysis for this run
         run_analysis = analyze_results(results)
         run_avg_errs.append(run_analysis['avg_errs'])
+        run_has_issues_counts.append(run_analysis['has_issues'])
+        run_failed_counts.append(run_analysis['failed'])
         
         for result in results:
             repo_name = result.get('repo_name', '')
@@ -372,15 +376,33 @@ def calculate_cross_run_stats(selected_files: List[str]) -> Dict[str, Any]:
     avg_passed_repos = sum(run_pass_counts) / len(run_pass_counts) if run_pass_counts else 0
     avg_pass_at_1 = avg_passed_repos / len(all_repos) * 100 if all_repos else 0
     
-    # Calculate mean of avgErrs across all runs
+    # Calculate means for all metrics
     mean_avg_errs = sum(run_avg_errs) / len(run_avg_errs) if run_avg_errs else 0
+    mean_has_issues = sum(run_has_issues_counts) / len(run_has_issues_counts) if run_has_issues_counts else 0
+    mean_failed = sum(run_failed_counts) / len(run_failed_counts) if run_failed_counts else 0
+    
+    # Calculate standard deviations
+    import math
+    
+    def calculate_std(values, mean_val):
+        if len(values) <= 1:
+            return 0
+        variance = sum((x - mean_val) ** 2 for x in values) / (len(values) - 1)
+        return math.sqrt(variance)
+    
+    std_passed = calculate_std(run_pass_counts, avg_passed_repos)
+    std_has_issues = calculate_std(run_has_issues_counts, mean_has_issues)
+    std_failed = calculate_std(run_failed_counts, mean_failed)
+    std_avg_errs = calculate_std(run_avg_errs, mean_avg_errs)
     
     logger.info(f"Cross-run stats: {len(all_repos)} total repos, {len(passed_repos)} passed repos")
     logger.info(f"Pass@k: {len(passed_repos)}/{len(all_repos)} = {pass_at_k:.1f}%")
     if pass_at_5 is not None:
         logger.info(f"Pass@5: {pass_at_5_repos}/{len(all_repos)} = {pass_at_5:.1f}%")
-    logger.info(f"Run pass counts: {run_pass_counts}")
+    logger.info(f"Run counts - Passed: {run_pass_counts}, Has Issues: {run_has_issues_counts}, Failed: {run_failed_counts}")
+    logger.info(f"Avg passed: {avg_passed_repos:.1f}±{std_passed:.1f}, Has issues: {mean_has_issues:.1f}±{std_has_issues:.1f}, Failed: {mean_failed:.1f}±{std_failed:.1f}")
     logger.info(f"Avg pass@1: {avg_passed_repos:.1f} repos passed per run out of {len(all_repos)} = {avg_pass_at_1:.1f}%")
+    logger.info(f"Avg errors: {mean_avg_errs:.2f}±{std_avg_errs:.2f}")
     
     result = {
         'total_repos': len(all_repos),
@@ -389,6 +411,12 @@ def calculate_cross_run_stats(selected_files: List[str]) -> Dict[str, Any]:
         'avg_pass_at_1': avg_pass_at_1,
         'avg_passed_repos': round(avg_passed_repos, 1),
         'avg_errs': round(mean_avg_errs, 2),
+        'avg_has_issues': round(mean_has_issues, 1),
+        'avg_failed': round(mean_failed, 1),
+        'std_passed': round(std_passed, 1),
+        'std_has_issues': round(std_has_issues, 1),
+        'std_failed': round(std_failed, 1),
+        'std_avg_errs': round(std_avg_errs, 2),
         'k': k
     }
     
