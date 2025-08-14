@@ -702,57 +702,174 @@
 
         function displayCrossRunStats(stats) {
             const crossRunStats = document.getElementById('crossRunStats');
-            // Determine column size based on number of metrics - now we have more metrics
-            const hasPass5 = stats.pass_at_5 !== undefined;
-            const colSize = 'col-lg-2 col-md-3 col-sm-4'; // Responsive columns for more metrics
-            
-            let statsHtml = `
-                <div class="${colSize}">
-                    <div class="stats-card">
-                        <div class="stats-number">${stats.passed_repos}/${stats.total_repos}</div>
-                        <div class="stats-label">Pass@${stats.k} (${stats.pass_at_k.toFixed(1)}%)</div>
+            // Top row logic
+            let topRow = '';
+            if (stats.k < 5) {
+                // Only Pass@k, secondary color
+                topRow = `
+                <div class="row g-3">
+                    <div class="col-lg-4 col-md-4"></div>
+                    <div class="col-lg-4 col-md-4">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c; font-weight: 600;">
+                            <div class="stats-number">${stats.passed_repos}/${stats.total_repos}</div>
+                            <div class="stats-label">Pass@${stats.k} (${stats.pass_at_k.toFixed(1)}%)</div>
+                        </div>
                     </div>
+                    <div class="col-lg-4 col-md-4"></div>
                 </div>`;
-            
-            // Add pass@5 if available
-            if (hasPass5) {
-                statsHtml += `
-                <div class="${colSize}">
-                    <div class="stats-card">
-                        <div class="stats-number">${stats.pass_at_5_repos}/${stats.total_repos}</div>
-                        <div class="stats-label">Pass@5 (${stats.pass_at_5.toFixed(1)}%)</div>
+            } else if (stats.k === 5) {
+                // Only Pass@5, primary color, always show value
+                let passAt5NumStr = `${stats.passed_repos}/${stats.total_repos}`;
+                let passAt5Pct = stats.pass_at_k !== undefined ? stats.pass_at_k.toFixed(1) : '-';
+                topRow = `
+                <div class="row g-3">
+                    <div class="col-lg-4 col-md-4"></div>
+                    <div class="col-lg-4 col-md-4">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #ffe082 0%, #43e97b 100%); color: #1b2e5c; font-weight: bold; border: 2px solid #43e97b; box-shadow: 0 2px 8px #43e97b22;">
+                            <div class="stats-number">${passAt5NumStr}</div>
+                            <div class="stats-label">Pass@5 (first 5 runs) (${passAt5Pct}%)</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-4"></div>
+                </div>`;
+            } else {
+                // k > 5: Pass@5 (primary), Pass@k and Mean Pass@5 (secondary)
+                let meanPassAt5Num = stats.all_samples_pass_at_5 !== undefined ? (stats.all_samples_pass_at_5 / 100 * stats.total_repos) : '-';
+                let meanPassAt5NumStr = meanPassAt5Num !== '-' ? `${meanPassAt5Num.toFixed(1)}/${stats.total_repos}` : '-';
+                let meanPassAt5Pct = stats.all_samples_pass_at_5 !== undefined ? stats.all_samples_pass_at_5.toFixed(1) : '-';
+                let passAt5NumStr = stats.pass_at_5_repos !== undefined ? `${stats.pass_at_5_repos}/${stats.total_repos}` : '-';
+                let passAt5Pct = stats.pass_at_5 !== undefined ? stats.pass_at_5.toFixed(1) : '-';
+                topRow = `
+                <div class="row g-3">
+                    <div class="col-lg-4 col-md-4">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #ffe082 0%, #43e97b 100%); color: #1b2e5c; font-weight: bold; border: 2px solid #43e97b; box-shadow: 0 2px 8px #43e97b22;">
+                            <div class="stats-number">${passAt5NumStr}</div>
+                            <div class="stats-label">Pass@5 (first 5 runs) (${passAt5Pct}%)</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-4">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c; font-weight: 600;">
+                            <div class="stats-number">${stats.passed_repos}/${stats.total_repos}</div>
+                            <div class="stats-label">Pass@${stats.k} (${stats.pass_at_k.toFixed(1)}%)</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-4">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c; font-weight: 600;">
+                            <div class="stats-number">${meanPassAt5NumStr}</div>
+                            <div class="stats-label">Mean Pass@5 (all samples) (${meanPassAt5Pct}%)</div>
+                        </div>
                     </div>
                 </div>`;
             }
-            
-            statsHtml += `
-                <div class="${colSize}">
-                    <div class="stats-card">
-                        <div class="stats-number">${stats.avg_passed_repos || 0}±${stats.std_passed || 0}</div>
-                        <div class="stats-label">Avg Passed (${stats.avg_pass_at_1.toFixed(1)}%)</div>
+            // Main metrics row (mean/total issue resolution, avgErrors)
+            let mainMetricsRow = `
+                <div class="row g-3">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #4e8cff 0%, #1b2e5c 100%); color: #fff;">
+                            <div class="stats-number">${stats.mean_issue_resolution_rate !== undefined ? stats.mean_issue_resolution_rate.toFixed(2) : '-'}%</div>
+                            <div class="stats-label">Mean Issue Resolution Rate</div>
+                        </div>
                     </div>
-                </div>
-                <div class="${colSize}">
-                    <div class="stats-card">
-                        <div class="stats-number">${stats.avg_has_issues || 0}±${stats.std_has_issues || 0}</div>
-                        <div class="stats-label">Avg Has Issues</div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c;">
+                            <div class="stats-number">${stats.total_issue_resolution_rate !== undefined ? stats.total_issue_resolution_rate.toFixed(2) : '-'}%</div>
+                            <div class="stats-label">Total Issue Resolution Rate</div>
+                        </div>
                     </div>
-                </div>
-                <div class="${colSize}">
-                    <div class="stats-card">
-                        <div class="stats-number">${stats.avg_failed || 0}±${stats.std_failed || 0}</div>
-                        <div class="stats-label">Avg Failed</div>
-                    </div>
-                </div>
-                <div class="${colSize}">
-                    <div class="stats-card">
-                        <div class="stats-number">${stats.avg_errs.toFixed(2)}±${stats.std_avg_errs.toFixed(2)}</div>
-                        <div class="stats-label">Avg Errors</div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c;">
+                            <div class="stats-number">${stats.avg_errs.toFixed(2)}±${stats.std_avg_errs.toFixed(2)}</div>
+                            <div class="stats-label">avgErrors</div>
+                        </div>
                     </div>
                 </div>
             `;
-            
-            crossRunStats.innerHTML = statsHtml;
+            // Last row: Avg Passed, Avg Has Issues, Avg Failed (Avg Passed stands out)
+            let avgRow = `
+                <div class="row g-3 mt-2">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #ffe082 100%); color: #205c20; font-weight: bold; border: 2px solid #43e97b; box-shadow: 0 2px 8px #43e97b22;">
+                            <div class="stats-number" style="font-size:2.1em;">${stats.avg_passed_repos || 0}±${stats.std_passed || 0}</div>
+                            <div class="stats-label">Avg Passed</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%); color: #bfa100;">
+                            <div class="stats-number">${stats.avg_has_issues || 0}±${stats.std_has_issues || 0}</div>
+                            <div class="stats-label">Avg Has Issues</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #b71c1c;">
+                            <div class="stats-number">${stats.avg_failed || 0}±${stats.std_failed || 0}</div>
+                            <div class="stats-label">Avg Failed</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            // Pie chart after avg row
+            let pieHtml = '';
+            {
+                const avgPass = stats.avg_passed_repos || 0;
+                const avgIssues = stats.avg_has_issues || 0;
+                const avgFailed = stats.avg_failed || 0;
+                const stdPass = stats.std_passed || 0;
+                const stdIssues = stats.std_has_issues || 0;
+                const stdFailed = stats.std_failed || 0;
+                const pieData = [{
+                    values: [avgPass, avgIssues, avgFailed],
+                    labels: [
+                        `Avg Passed: ${avgPass.toFixed(1)}±${stdPass.toFixed(1)}`,
+                        `Avg Has Issues: ${avgIssues.toFixed(1)}±${stdIssues.toFixed(1)}`,
+                        `Avg Failed: ${avgFailed.toFixed(1)}±${stdFailed.toFixed(1)}`
+                    ],
+                    type: 'pie',
+                    marker: {
+                        colors: ['#43e97b', '#fff9c4', '#ffcdd2']
+                    },
+                    textinfo: 'label+percent',
+                    textposition: 'outside',
+                    hole: 0.4
+                }];
+                const pieLayout = {
+                    height: 320,
+                    margin: { t: 20, b: 20, l: 20, r: 20 },
+                    showlegend: true
+                };
+                pieHtml = '<div class="row mb-3"><div class="col-12"><div id="summaryPieChart" style="height: 320px;"></div></div></div>';
+                setTimeout(() => { Plotly.newPlot('summaryPieChart', pieData, pieLayout); }, 0);
+            }
+            crossRunStats.innerHTML = topRow + mainMetricsRow + avgRow + pieHtml;
+            // Draw pie chart always (after DOM update)
+            {
+                const avgPass = stats.avg_passed_repos || 0;
+                const avgIssues = stats.avg_has_issues || 0;
+                const avgFailed = stats.avg_failed || 0;
+                const stdPass = stats.std_passed || 0;
+                const stdIssues = stats.std_has_issues || 0;
+                const stdFailed = stats.std_failed || 0;
+                const pieData = [{
+                    values: [avgPass, avgIssues, avgFailed],
+                    labels: [
+                        `Avg Passed: ${avgPass.toFixed(1)}±${stdPass.toFixed(1)}`,
+                        `Avg Has Issues: ${avgIssues.toFixed(1)}±${stdIssues.toFixed(1)}`,
+                        `Avg Failed: ${avgFailed.toFixed(1)}±${stdFailed.toFixed(1)}`
+                    ],
+                    type: 'pie',
+                    marker: {
+                        colors: ['#43e97b', '#fff9c4', '#ffcdd2']
+                    },
+                    textinfo: 'label+percent',
+                    textposition: 'outside',
+                    hole: 0.4
+                }];
+                const pieLayout = {
+                    height: 320,
+                    margin: { t: 20, b: 20, l: 20, r: 20 },
+                    showlegend: true
+                };
+                setTimeout(() => { Plotly.newPlot('summaryPieChart', pieData, pieLayout); }, 0);
+            }
         }
 
         function displayRunsTable(fileAnalyses) {
@@ -838,6 +955,24 @@
                 const chartId = `chart-${filePath.replace(/[^a-zA-Z0-9]/g, '_')}`;
                 createPieChart(chartId, analysis);
             });
+
+            // After the charts, add documentation for metrics
+            const docHtml = `
+                <div class="mt-5 p-4 bg-light rounded shadow-sm">
+                    <h5>Metrics Documentation</h5>
+                    <ul>
+                        <li><b>Pass@k</b>: Number and percent of unique repositories that passed (exit_code=0, issues=0) in any of the selected runs.</li>
+                        <li><b>Pass@5</b>: Number and percent of unique repositories that passed in at least one of the first 5 runs.</li>
+                        <li><b>Avg Passed</b>: Average number of repositories that passed per run (± standard deviation).</li>
+                        <li><b>Avg Has Issues</b>: Average number of repositories per run that had exit_code=0 but nonzero issues (± std).</li>
+                        <li><b>Avg Failed</b>: Average number of repositories per run that failed (exit_code≠0) (± std).</li>
+                        <li><b>Avg Errors</b>: Average number of issues for all repositories with exit_code=0, averaged per run (± std).</li>
+                        <li><b>Total Issue Resolution Rate</b>: 100% minus the ratio of the sum of remaining issues to the sum of initial issues, across all repositories in all runs. Measures overall progress in resolving issues.</li>
+                        <li><b>Mean Issue Resolution Rate</b>: The mean of (1 - (remaining issues / initial issues)) across all repositories and runs. Reflects the average fraction of issues resolved per repository.</li>
+                    </ul>
+                </div>
+            `;
+            individualCharts.insertAdjacentHTML('afterend', docHtml);
         }
 
         function createPieChart(chartId, analysis) {

@@ -28,89 +28,110 @@ fs = HfFileSystem()
 _results_files = None
 CACHE_FILE = Path(__file__).resolve().parent / "results_files_cache.json"
 
-def walk_dataset_for_results():
-    """Walk the dataset directory looking for results.jsonl files, avoiding trajectories folders"""
+# --- Add global for initial issues counts ---
+INITIAL_ISSUES_FILE = Path(__file__).resolve().parent / "initial_issues_counts.jsonl"
+_initial_issues_map = None
+
+def get_initial_issues_map():
+    global _initial_issues_map
+    if _initial_issues_map is not None:
+        return _initial_issues_map
+    issues_map = {}
+    try:
+        with open(INITIAL_ISSUES_FILE, 'r') as f:
+            for line in f:
+                if line.strip():
+                    data = json.loads(line)
+                    repo = data['repository']
+                    count = data['initial_issues_count']
+                    issues_map[repo] = count
+    except Exception as e:
+        logger.error(f"Failed to load initial issues: {e}")
+    _initial_issues_map = issues_map
+    return issues_map
+
+# --- Only walk dataset on explicit recache, never on normal get/search ---
+def walk_dataset_for_results(force_recache=False):
+    """Walk the dataset directory looking for results.jsonl files, avoiding trajectories folders and skipping known folders with results.jsonl. Append new entries only. Only walk if force_recache=True."""
     global _results_files
-    
-    # Check if we have cached results
-    if _results_files is not None:
+
+    # If not forcing recache, always use cache if present
+    if not force_recache and _results_files is not None:
         return _results_files
-    
-    # Try to load from cache file first
-    if os.path.exists(CACHE_FILE):
+    if not force_recache and os.path.exists(CACHE_FILE):
         try:
-            logger.info(f"Loading results files from cache: {CACHE_FILE}")
             with open(CACHE_FILE, 'r') as f:
                 _results_files = json.load(f)
-            logger.info(f"Loaded {len(_results_files)} results files from cache")
             return _results_files
         except Exception as e:
             logger.warning(f"Failed to load cache: {e}")
-    
-    # If no cache, walk the dataset
-    logger.info("No cache found, walking dataset...")
-    
-    try:
-        logger.info(f"Walking dataset {DATASET_NAME} to find results.jsonl files...")
-        
-        # Try different path formats
-        possible_paths = [
-            f"datasets/{DATASET_NAME}",
-            DATASET_NAME,
-            f"datasets/{DATASET_NAME}/main",
-            f"{DATASET_NAME}/main"
-        ]
-        
-        dataset_path = None
-        for path in possible_paths:
-            try:
-                logger.info(f"Trying path: {path}")
-                items = fs.ls(path, detail=True)
-                logger.info(f"Successfully listed {len(items)} items in {path}")
-                dataset_path = path
-                break
-            except Exception as e:
-                logger.warning(f"Failed to list {path}: {e}")
-        
-        if dataset_path is None:
-            logger.error("Could not find valid dataset path")
-            return []
-        
-        def walk_directory(path):
-            """Recursively walk directory, avoiding trajectories folders"""
-            results = []
-            try:
-                logger.info(f"Walking directory: {path}")
-                items = fs.ls(path, detail=True)
-                logger.info(f"Found {len(items)} items in {path}")
-                
-                for item in items:
-                    item_path = item['name']
-                    item_type = item['type']
-                    
-                    logger.debug(f"Item: {item_path} (type: {item_type})")
-                    
-                    # Skip trajectories folders
-                    if item_type == 'directory' and 'trajectories' == item_path.split('/')[-1]:
-                        logger.info(f"Skipping trajectories folder: {item_path}")
-                        continue
-                    
-                    if item_type == 'file' and item_path.endswith('results.jsonl'):
-                        logger.info(f"Found results.jsonl: {item_path}")
-                        # Remove dataset prefix for cleaner paths
-                        clean_path = item_path.replace(f"{dataset_path}/", "")
-                        # Extract date from filename
+            _results_files = []
+            return _results_files
+
+    # If force_recache, do the walk and update cache
+    cached_files = []
+    if os.path.exists(CACHE_FILE):
+        try:
+            with open(CACHE_FILE, 'r') as f:
+                cached_files = json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load cache: {e}")
+            cached_files = []
+
+    # Build a set of known parent folders (relative to dataset_path) that already have results.jsonl
+    known_folders = set()
+    known_files = set()
+    for entry in cached_files:
+        path = entry['path']
+        known_files.add(path)
+        parent = os.path.dirname(path)
+        known_folders.add(parent)
+
+    # Try different path formats
+    possible_paths = [
+        f"datasets/{DATASET_NAME}",
+        DATASET_NAME,
+        f"datasets/{DATASET_NAME}/main",
+        f"{DATASET_NAME}/main"
+    ]
+    dataset_path = None
+    for path in possible_paths:
+        try:
+            items = fs.ls(path, detail=True)
+            dataset_path = path
+            break
+        except Exception as e:
+            continue
+    if dataset_path is None:
+        _results_files = cached_files
+        return _results_files
+
+    def walk_directory(path, rel_path=""):
+        results = []
+        try:
+            # If this folder is already known to have results.jsonl, skip it
+            if rel_path in known_folders:
+                return []
+            items = fs.ls(path, detail=True)
+            found_results = False
+            for item in items:
+                item_path = item['name']
+                item_type = item['type']
+                clean_path = item_path.replace(f"{dataset_path}/", "")
+                # Skip trajectories folders
+                if item_type == 'directory' and 'trajectories' == item_path.split('/')[-1]:
+                    continue
+                if item_type == 'file' and item_path.endswith('results.jsonl'):
+                    found_results = True
+                    if clean_path not in known_files:
                         import re
                         from datetime import datetime
-                        
                         mtime = ''
-                        # Try multiple date patterns
                         patterns = [
-                            (r'(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})', '%Y-%m-%d_%H-%M-%S'),  # 2025-07-18_23-09-01
-                            (r'(\d{4}-\d{2}-\d{2})', '%Y-%m-%d'),  # 2025-07-18
-                            (r'(\d{8})', '%Y%m%d'),  # 20250718
+                            (r'(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})', '%Y-%m-%d_%H-%M-%S'),
+                            (r'(\d{4}-\d{2}-\d{2})', '%Y-%m-%d'),
+                            (r'(\d{8})', '%Y%m%d'),
                         ]
-                        
                         for pattern, format_str in patterns:
                             date_match = re.search(pattern, clean_path)
                             if date_match:
@@ -118,77 +139,56 @@ def walk_dataset_for_results():
                                     date_str = date_match.group(1)
                                     dt = datetime.strptime(date_str, format_str)
                                     mtime = dt.isoformat()
-                                    logger.debug(f"Extracted date from {clean_path} using pattern {pattern}: {mtime}")
                                     break
                                 except Exception as e:
-                                    logger.debug(f"Failed to parse date {date_str} with format {format_str}: {e}")
                                     continue
-                        
                         if not mtime:
-                            logger.warning(f"No date pattern found in {clean_path}")
-                            # Use a very old date for files without dates so they sort to the end
                             mtime = '1900-01-01T00:00:00'
-                        
-                        logger.info(f"Final mtime for {clean_path}: {mtime}")
-                        
                         results.append({
                             'path': clean_path,
                             'size': item.get('size', 0),
                             'last_modified': mtime
                         })
-                    elif item_type == 'directory':
-                        logger.info(f"Entering directory: {item_path}")
-                        # Recursively walk subdirectories
-                        sub_results = walk_directory(item_path)
-                        results.extend(sub_results)
-                        
-            except Exception as e:
-                logger.error(f"Error walking {path}: {e}")
-                import traceback
-                logger.error(f"Traceback: {traceback.format_exc()}")
-            
-            return results
-        
-        _results_files = walk_directory(dataset_path)
-        logger.info(f"Found {len(_results_files)} results.jsonl files in dataset")
-        
-        # Sort by newest first (last_modified descending)
-        # Files with fallback date (1900-01-01) will naturally sort to the end
-        _results_files.sort(key=lambda x: x.get('last_modified', '1900-01-01T00:00:00'), reverse=True)
-        logger.info("Sorted files by newest first")
-        
-        # Save to cache file
-        try:
-            logger.info(f"Saving {len(_results_files)} results files to cache: {CACHE_FILE}")
-            with open(CACHE_FILE, 'w') as f:
-                json.dump(_results_files, f, indent=2)
-            logger.info("Cache saved successfully")
+                elif item_type == 'directory':
+                    # Only go into subfolders if this folder is not known to have results.jsonl
+                    sub_rel_path = os.path.join(rel_path, os.path.basename(item_path)) if rel_path else os.path.basename(item_path)
+                    # If this subfolder is known to have results.jsonl, skip recursion
+                    if sub_rel_path in known_folders:
+                        continue
+                    sub_results = walk_directory(item_path, sub_rel_path)
+                    results.extend(sub_results)
         except Exception as e:
-            logger.error(f"Failed to save cache: {e}")
-        
-        return _results_files
-        
+            pass
+        return results
+
+    new_results = walk_directory(dataset_path, "")
+    all_results = cached_files + new_results
+    seen = set()
+    deduped_results = []
+    for entry in all_results:
+        if entry['path'] not in seen:
+            deduped_results.append(entry)
+            seen.add(entry['path'])
+    deduped_results.sort(key=lambda x: x.get('last_modified', '1900-01-01T00:00:00'), reverse=True)
+    try:
+        with open(CACHE_FILE, 'w') as f:
+            json.dump(deduped_results, f, indent=2)
     except Exception as e:
-        logger.error(f"Error walking dataset: {e}")
-        return []
+        pass
+    _results_files = deduped_results
+    return _results_files
+
+# Update get_results_files and search_results_files to never walk unless forced
 
 def get_results_files():
-    """Get all results.jsonl files - cached from startup walk"""
-    return walk_dataset_for_results()
+    return walk_dataset_for_results(force_recache=False)
 
 def search_results_files(query=""):
-    """Search for results.jsonl files in the dataset"""
-    logger.info(f"Searching for results.jsonl files with query: '{query}'")
     files = get_results_files()
     results_files = []
-    
-    logger.info(f"Filtering {len(files)} cached results.jsonl files")
-    
     for file_info in files:
         if query.lower() in file_info['path'].lower():
             results_files.append(file_info)
-    
-    logger.info(f"Found {len(results_files)} results.jsonl files matching query")
     return results_files
 
 def download_results_file(file_path: str) -> List[Dict]:
@@ -283,64 +283,80 @@ def analyze_results(results: List[Dict]) -> Dict[str, Any]:
         'avg_errs': round(avg_errs, 2)
     }
 
+# --- Update calculate_cross_run_stats to add new metrics ---
 def calculate_cross_run_stats(selected_files: List[str]) -> Dict[str, Any]:
-    """Calculate cross-run statistics"""
+    """Calculate cross-run statistics, including issue resolution rates."""
     all_repos = set()
     passed_repos = set()
-    run_pass_counts = []  # Number of repos that passed in each run
-    run_has_issues_counts = []  # Number of repos with issues in each run
-    run_failed_counts = []  # Number of repos that failed in each run
-    run_avg_errs = []  # AvgErrs for each run
-    
+    run_pass_counts = []
+    run_has_issues_counts = []
+    run_failed_counts = []
+    run_avg_errs = []
+    run_total_issues_solved_rate = []
+    run_avg_issues_solved_rate = []
+
+    initial_issues_map = get_initial_issues_map()
+
     for file_path in selected_files:
         results = download_results_file(file_path)
-        run_passed = 0  # Count repos that passed in this run
-        
-        # Calculate analysis for this run
+        run_passed = 0
+        run_issues_count_sum = 0
+        run_initial_issues_sum = 0
+        run_issues_solved_rates = []
+
         run_analysis = analyze_results(results)
         run_avg_errs.append(run_analysis['avg_errs'])
         run_has_issues_counts.append(run_analysis['has_issues'])
         run_failed_counts.append(run_analysis['failed'])
-        
+
         for result in results:
             repo_name = result.get('repo_name', '')
             if repo_name:
                 all_repos.add(repo_name)
-                
-                # Use same parsing logic as analyze_results
                 exit_code = None
                 issues_count = None
-                
-                # Structure 1: result.results.exit_code
                 if 'results' in result and isinstance(result['results'], dict):
                     exit_code = result['results'].get('exit_code')
                     issues_count = result['results'].get('issues_count', 0)
-                # Structure 2: result.exit_code (direct)
                 elif 'exit_code' in result:
                     exit_code = result['exit_code']
                     issues_count = result.get('issues_count', 0)
                 else:
-                    exit_code = 1  # Assume failed if we can't parse
+                    exit_code = 1
                     issues_count = 0
-                
-                # Default to failed if we can't find exit_code
                 if exit_code is None:
                     exit_code = 1
                     issues_count = 0
-                
                 if exit_code == 0 and issues_count == 0:
                     passed_repos.add(repo_name)
                     run_passed += 1
-        
+                # --- Issue solved rate logic ---
+                initial_issues = initial_issues_map.get(repo_name)
+                if initial_issues is not None and initial_issues > 0:
+                    # If failed, use initial_issues_count as issues_count (assume no progress)
+                    if exit_code != 0:
+                        issues_count_for_metric = initial_issues
+                    else:
+                        issues_count_for_metric = issues_count
+                    run_issues_count_sum += issues_count_for_metric
+                    run_initial_issues_sum += initial_issues
+                    run_issues_solved_rates.append(1 - (issues_count_for_metric / initial_issues))
         run_pass_counts.append(run_passed)
-    
+        # --- Compute rates for this run ---
+        if run_initial_issues_sum > 0:
+            total_issues_solved_rate = 1 - (run_issues_count_sum / run_initial_issues_sum)
+        else:
+            total_issues_solved_rate = 0
+        avg_issues_solved_rate = sum(run_issues_solved_rates) / len(run_issues_solved_rates) if run_issues_solved_rates else 0
+        run_total_issues_solved_rate.append(total_issues_solved_rate)
+        run_avg_issues_solved_rate.append(avg_issues_solved_rate)
+
     k = len(selected_files)
     pass_at_k = len(passed_repos) / len(all_repos) * 100 if all_repos else 0
-    
-    # Calculate pass@5 if k >= 5
     pass_at_5 = None
     pass_at_5_repos = None
-    if k >= 5:
+    all_samples_pass_at_5 = None
+    if k > 5:
         # For pass@5, find repos that passed in at least one of the first 5 runs
         pass_5_repos = set()
         for i, file_path in enumerate(selected_files[:5]):
@@ -348,10 +364,8 @@ def calculate_cross_run_stats(selected_files: List[str]) -> Dict[str, Any]:
             for result in results:
                 repo_name = result.get('repo_name', '')
                 if repo_name:
-                    # Use same parsing logic
                     exit_code = None
                     issues_count = None
-                    
                     if 'results' in result and isinstance(result['results'], dict):
                         exit_code = result['results'].get('exit_code')
                         issues_count = result['results'].get('issues_count', 0)
@@ -361,49 +375,74 @@ def calculate_cross_run_stats(selected_files: List[str]) -> Dict[str, Any]:
                     else:
                         exit_code = 1
                         issues_count = 0
-                    
                     if exit_code is None:
                         exit_code = 1
                         issues_count = 0
-                    
                     if exit_code == 0 and issues_count == 0:
                         pass_5_repos.add(repo_name)
-        
         pass_at_5_repos = len(pass_5_repos)
         pass_at_5 = pass_at_5_repos / len(all_repos) * 100 if all_repos else 0
-    
-    # Calculate average pass@1 (average number of repos that passed per run)
+        # --- New: mean pass@5 over all samples, computed efficiently ---
+        from math import comb
+        # For each repo, count number of successful runs
+        repo_success_counts = {repo: 0 for repo in all_repos}
+        for file_path in selected_files:
+            results = download_results_file(file_path)
+            for result in results:
+                repo_name = result.get('repo_name', '')
+                if repo_name in repo_success_counts:
+                    exit_code = None
+                    issues_count = None
+                    if 'results' in result and isinstance(result['results'], dict):
+                        exit_code = result['results'].get('exit_code')
+                        issues_count = result['results'].get('issues_count', 0)
+                    elif 'exit_code' in result:
+                        exit_code = result['exit_code']
+                        issues_count = result.get('issues_count', 0)
+                    else:
+                        exit_code = 1
+                        issues_count = 0
+                    if exit_code is None:
+                        exit_code = 1
+                        issues_count = 0
+                    if exit_code == 0 and issues_count == 0:
+                        repo_success_counts[repo_name] += 1
+        n = k
+        mean_pass_at_5_probs = []
+        for repo, m in repo_success_counts.items():
+            if n < 5:
+                prob = 1.0 if m > 0 else 0.0
+            elif m == 0:
+                prob = 0.0
+            elif m == n:
+                prob = 1.0
+            else:
+                try:
+                    prob = 1 - (comb(n - m, 5) / comb(n, 5))
+                except Exception:
+                    prob = 0.0
+            mean_pass_at_5_probs.append(prob)
+        if mean_pass_at_5_probs:
+            all_samples_pass_at_5 = sum(mean_pass_at_5_probs) / len(mean_pass_at_5_probs) * 100
     avg_passed_repos = sum(run_pass_counts) / len(run_pass_counts) if run_pass_counts else 0
     avg_pass_at_1 = avg_passed_repos / len(all_repos) * 100 if all_repos else 0
-    
-    # Calculate means for all metrics
     mean_avg_errs = sum(run_avg_errs) / len(run_avg_errs) if run_avg_errs else 0
     mean_has_issues = sum(run_has_issues_counts) / len(run_has_issues_counts) if run_has_issues_counts else 0
     mean_failed = sum(run_failed_counts) / len(run_failed_counts) if run_failed_counts else 0
-    
-    # Calculate standard deviations
     import math
-    
     def calculate_std(values, mean_val):
         if len(values) <= 1:
             return 0
         variance = sum((x - mean_val) ** 2 for x in values) / (len(values) - 1)
         return math.sqrt(variance)
-    
     std_passed = calculate_std(run_pass_counts, avg_passed_repos)
     std_has_issues = calculate_std(run_has_issues_counts, mean_has_issues)
     std_failed = calculate_std(run_failed_counts, mean_failed)
     std_avg_errs = calculate_std(run_avg_errs, mean_avg_errs)
-    
-    logger.info(f"Cross-run stats: {len(all_repos)} total repos, {len(passed_repos)} passed repos")
-    logger.info(f"Pass@k: {len(passed_repos)}/{len(all_repos)} = {pass_at_k:.1f}%")
-    if pass_at_5 is not None:
-        logger.info(f"Pass@5: {pass_at_5_repos}/{len(all_repos)} = {pass_at_5:.1f}%")
-    logger.info(f"Run counts - Passed: {run_pass_counts}, Has Issues: {run_has_issues_counts}, Failed: {run_failed_counts}")
-    logger.info(f"Avg passed: {avg_passed_repos:.1f}±{std_passed:.1f}, Has issues: {mean_has_issues:.1f}±{std_has_issues:.1f}, Failed: {mean_failed:.1f}±{std_failed:.1f}")
-    logger.info(f"Avg pass@1: {avg_passed_repos:.1f} repos passed per run out of {len(all_repos)} = {avg_pass_at_1:.1f}%")
-    logger.info(f"Avg errors: {mean_avg_errs:.2f}±{std_avg_errs:.2f}")
-    
+    mean_total_issues_solved_rate = sum(run_total_issues_solved_rate) / len(run_total_issues_solved_rate) if run_total_issues_solved_rate else 0
+    mean_avg_issues_solved_rate = sum(run_avg_issues_solved_rate) / len(run_avg_issues_solved_rate) if run_avg_issues_solved_rate else 0
+    mean_total_issues_solved_rate_pct = mean_total_issues_solved_rate * 100
+    mean_avg_issues_solved_rate_pct = mean_avg_issues_solved_rate * 100
     result = {
         'total_repos': len(all_repos),
         'passed_repos': len(passed_repos),
@@ -417,13 +456,14 @@ def calculate_cross_run_stats(selected_files: List[str]) -> Dict[str, Any]:
         'std_has_issues': round(std_has_issues, 1),
         'std_failed': round(std_failed, 1),
         'std_avg_errs': round(std_avg_errs, 2),
-        'k': k
+        'k': k,
+        'total_issue_resolution_rate': round(mean_total_issues_solved_rate_pct, 2),
+        'mean_issue_resolution_rate': round(mean_avg_issues_solved_rate_pct, 2),
     }
-    
-    if pass_at_5 is not None:
+    if k > 5:
         result['pass_at_5'] = pass_at_5
         result['pass_at_5_repos'] = pass_at_5_repos
-    
+        result['all_samples_pass_at_5'] = all_samples_pass_at_5
     return result
 
 @app.route('/')
@@ -468,23 +508,11 @@ def api_search_files():
 
 @app.route('/api/clear_cache', methods=['POST'])
 def api_clear_cache():
-    """Clear the file cache and re-walk the dataset"""
     global _results_files
     _results_files = None
-    
-    # Also remove cache file
-    if os.path.exists(CACHE_FILE):
-        try:
-            os.remove(CACHE_FILE)
-            logger.info(f"Removed cache file: {CACHE_FILE}")
-        except Exception as e:
-            logger.error(f"Failed to remove cache file: {e}")
-    
-    logger.info("File cache cleared, re-walking dataset...")
-    
-    # Immediately re-walk the dataset to rebuild cache
+    logger.info("File cache cleared, re-walking dataset (append-only mode)...")
     try:
-        files = walk_dataset_for_results()
+        files = walk_dataset_for_results(force_recache=True)
         logger.info(f"Cache rebuilt with {len(files)} files")
         cache_info = get_cache_info()
         return jsonify({
