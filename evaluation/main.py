@@ -1,4 +1,4 @@
-from itertools import repeat
+import asyncio
 import json
 import logging
 import os
@@ -8,17 +8,15 @@ import stat
 import time
 from typing import Optional
 
-from docker import from_env  # type: ignore[import-untyped]
-from docker.errors import APIError, ContainerError, DockerException, ImageNotFound  # type: ignore[import-untyped]
+import aiodocker
+from aiodocker.exceptions import DockerError
 from dotenv import load_dotenv
 from huggingface_hub import hf_hub_download, upload_file  # type: ignore[import-untyped]
 import hydra
 from hydra.utils import to_absolute_path
-import jsonlines
+import jsonlines  # type: ignore[import-untyped]
 from omegaconf import DictConfig
-import pandas as pd
-import requests.exceptions
-from tqdm.contrib.concurrent import process_map
+import pandas as pd  # type: ignore[import-untyped]
 
 from env_setup_utils.repo_downloader import RepoDownloader
 
@@ -56,7 +54,7 @@ def remove_bad_commands(script: str) -> str:
     return "\n".join(res)
 
 
-def run_opensource(
+async def run_opensource(
     repo_downloader: RepoDownloader,
     repo_name: str,
     commit_sha: str,
@@ -135,46 +133,66 @@ def run_opensource(
 
     # Setup a docker client
     logging.info("Setting up Docker client")
-    docker_client = from_env(timeout=cfg.docker.create_container_timeout)
+    docker_client = aiodocker.Docker()
 
-    # Prepare volumes
-    volumes = {
-        os.path.abspath(repo_path): {"bind": "/data/project", "mode": "rw"},
+    # Prepare container config
+    container_config = {
+        "Image": cfg.docker.image[cfg.language],
+        "Cmd": ["/bin/bash", "-c", "/data/project/build.sh"],
+        "WorkingDir": "/data/project",
+        "HostConfig": {
+            "Binds": [f"{os.path.abspath(repo_path)}:/data/project:rw"],
+        },
     }
 
     start_time = time.time()
-    container_result = None
+    container = None
 
     try:
-        # Run the build script inside a Docker container
+        # Run the build script inside a Docker container with asyncio timeout
         logging.info(f"Starting Docker container for {repo_name}")
-        container = docker_client.containers.run(
-            image=cfg.docker.image[cfg.language],
-            volumes=volumes,
-            entrypoint="/bin/bash",
-            command="-c '/data/project/build.sh'",
-            detach=True,
+
+        async def run_container_with_timeout():
+            nonlocal container
+            # Create container
+            container = await docker_client.containers.create(config=container_config)
+            logging.info(f"Container created: {container.id[:12]}")
+
+            # Start container
+            await container.start()
+            logging.info("Container started")
+
+            # Stream logs with timeout
+            logs_buffer = []
+            async for log_chunk in container.log(stdout=True, stderr=True, follow=True):
+                log_line = log_chunk.strip()
+                if log_line:
+                    decoded_line = log_line if isinstance(log_line, str) else log_line.decode("utf-8")
+                    logging.info(f"[Docker] {decoded_line}")
+                    logs_buffer.append(decoded_line)
+
+            # Wait for container to finish
+            result = await container.wait()
+            exit_code = result.get("StatusCode", 1)
+
+            # Get all logs
+            all_logs = await container.log(stdout=True, stderr=True, follow=False)
+            container_logs = "".join([
+                log.decode("utf-8") if isinstance(log, bytes) else log
+                for log in all_logs
+            ])
+
+            return exit_code, container_logs
+
+        # Apply asyncio timeout
+        exit_code, container_logs = await asyncio.wait_for(
+            run_container_with_timeout(),
+            timeout=cfg.docker.container_timeout
         )
 
-        # Stream logs with a timeout
-        start_time = time.time()
-
-        for log in container.logs(stream=True, follow=True):
-            log_line = log.decode("utf-8").strip()
-            if log_line:  # Only log non-empty lines
-                logging.info(f"[Docker] {log_line}")
-
-            # Check for timeout
-            if time.time() - start_time > cfg.docker.container_timeout:
-                logging.warning("Docker container timeout reached.")
-                break
-
-        container_result = container.wait(timeout=cfg.docker.container_timeout)
-        exit_code = container_result.get("StatusCode", 1)
         logging.info(f"Container finished with exit code {exit_code}")
-
         json_result["exit_code"] = exit_code
-        json_result["container_logs"] = container.logs().decode("utf-8")
+        json_result["container_logs"] = container_logs
 
         # Try to read the results file from the container
         try:
@@ -189,18 +207,12 @@ def run_opensource(
                 logging.warning("results.json not found")
         except (json.JSONDecodeError, FileNotFoundError) as e:
             logging.error(f"Error reading results.json: {str(e)}")
-        container.remove()
-        logging.info("Container removed")
 
-    except requests.exceptions.ConnectionError as e:
-        logging.error("Connection timeout")
+    except asyncio.TimeoutError:
+        logging.error(f"Container timeout ({cfg.docker.container_timeout}s) reached")
         json_result["exit_code"] = cfg.exit_codes.timeout
-        json_result["container_logs"] = str(e)
-    except requests.exceptions.ReadTimeout as e:
-        logging.error("Container creation timeout")
-        json_result["exit_code"] = cfg.exit_codes.create_container_failure
-        json_result["container_logs"] = str(e)
-    except (ContainerError, ImageNotFound, APIError, DockerException) as e:
+        json_result["container_logs"] = f"Container execution timeout after {cfg.docker.container_timeout} seconds"
+    except DockerError as e:
         logging.error(f"Docker error: {str(e)}")
         json_result["exit_code"] = cfg.exit_codes.docker_failure
         json_result["container_logs"] = str(e)
@@ -209,6 +221,17 @@ def run_opensource(
         json_result["exit_code"] = cfg.exit_codes.unknown_failure
         json_result["container_logs"] = f"An unknown exception occurred: {str(e)}"
     finally:
+        # Clean up container
+        if container:
+            try:
+                await container.delete(force=True)
+                logging.info("Container removed")
+            except Exception as e:
+                logging.warning(f"Failed to remove container: {str(e)}")
+
+        # Close Docker client
+        await docker_client.close()
+
         end_time = time.time()
         execution_time = end_time - start_time
         json_result["execution_time"] = execution_time
@@ -228,13 +251,38 @@ def run_opensource(
 
     with open(json_path, "w") as f:
         json.dump(json_result, f)
+    logging.info("Completed")
 
     return None
 
 
+async def run_batch_async(
+    repo_downloader: RepoDownloader,
+    repo_names: list[str],
+    commit_shas: list[str],
+    cfg: DictConfig,
+    scripts: Optional[list[str]] = None,
+):
+    """Run multiple repositories concurrently with asyncio."""
+    semaphore = asyncio.Semaphore(cfg.operation.pool_config.get('max_workers', 4))
+
+    async def run_single_repo(repo_name: str, commit_sha: str, script: Optional[str] = None):
+        async with semaphore:
+            return await run_opensource(repo_downloader, repo_name, commit_sha, cfg, script)
+
+    tasks = []
+    for i, (repo_name, commit_sha) in enumerate(zip(repo_names, commit_shas)):
+        script = scripts[i] if scripts else None
+        task = run_single_repo(repo_name, commit_sha, script)
+        tasks.append(task)
+
+    # Run all tasks concurrently
+    await asyncio.gather(*tasks, return_exceptions=True)
+
+
 # Dictionary of available evaluation tools
 eval_tools = {
-    "opensource": run_opensource,
+    "opensource": run_batch_async,
 }
 
 
@@ -285,9 +333,8 @@ def main(cfg: DictConfig) -> None:
             repos = repos.loc[~repos[repo_name_col].isin(processed_repos_df[repo_name_col])]
             logging.info(f"Got {len(repos)} repos to process.")
     else:
-        logging.info(
-            f"Configured to overwrite existing results. Removing {os.path.join(cfg.operation.dirs.json_results, 'results')}."
-        )
+        results_dir = os.path.join(cfg.operation.dirs.json_results, 'results')
+        logging.info(f"Configured to overwrite existing results. Removing {results_dir}.")
         if os.path.exists(os.path.join(cfg.operation.dirs.json_results, "results")):
             shutil.rmtree(os.path.join(cfg.operation.dirs.json_results, "results"))
 
@@ -306,27 +353,23 @@ def main(cfg: DictConfig) -> None:
     if cfg.eval_tool not in eval_tools:
         raise ValueError(f"Unknown evaluation tool: {cfg.eval_tool}. Supported tools are: {list(eval_tools.keys())}")
 
-    # Run processes
+    # Run async batch processing
     func = eval_tools[cfg.eval_tool]
     if cfg.input.use_scripts:
-        process_map(
-            func,
-            repeat(repo_downloader),
+        asyncio.run(func(
+            repo_downloader,
             repos[repo_name_col].to_list(),
             repos[commit_sha_col].to_list(),
-            repeat(cfg),
+            cfg,
             repos[script_col].to_list(),
-            **cfg.operation.pool_config,
-        )
+        ))
     else:
-        process_map(
-            func,
-            repeat(repo_downloader),
+        asyncio.run(func(
+            repo_downloader,
             repos[repo_name_col].to_list(),
             repos[commit_sha_col].to_list(),
-            repeat(cfg),
-            **cfg.operation.pool_config,
-        )
+            cfg,
+        ))
 
     # Create local jsonl file with results
     jsonl_path = os.path.join(
