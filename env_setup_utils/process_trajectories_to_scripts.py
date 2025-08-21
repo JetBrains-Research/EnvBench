@@ -5,9 +5,9 @@ import os
 import tempfile
 from typing import Any, Dict, List
 
-import jsonlines
 from dotenv import load_dotenv
 from huggingface_hub import hf_hub_download, list_repo_tree, upload_file  # type: ignore[import-untyped]
+import jsonlines
 from tqdm import tqdm  # type: ignore[import-untyped]
 
 load_dotenv()
@@ -102,18 +102,18 @@ def process_trajectory_file(file_path: str) -> Dict[str, str]:
     """Process a single trajectory file and return the script data."""
     with jsonlines.open(file_path, "r") as reader:
         trajectory = [line for line in reader]
-    
+
     # Extract repository and revision from filename
     filename = os.path.basename(file_path)
-    if filename.endswith('.jsonl'):
+    if filename.endswith(".jsonl"):
         filename = filename[:-6]  # Remove .jsonl extension
-    
-    if '@' in filename:
-        repository, revision = filename.split('@', 1)
+
+    if "@" in filename:
+        repository, revision = filename.split("@", 1)
     else:
         logging.warning(f"Could not parse repository and revision from filename: {filename}")
         repository, revision = filename, "unknown"
-    
+
     script = parse_script_from_trajectory(trajectory)
     if not script:
         script = parse_installamatic_trajectory(trajectory)
@@ -126,13 +126,10 @@ def process_trajectory_file(file_path: str) -> Dict[str, str]:
 
 
 def process_trajectories_to_scripts(
-    trajectories_dataset: str, 
-    input_trajectories_dir: str, 
-    local_path: str | None = None
+    trajectories_dataset: str, input_trajectories_dir: str, local_path: str | None = None
 ):
     scripts = []
     with tempfile.TemporaryDirectory() as temp_dir:
-    
         if local_path is not None:
             # Handle local path - treat input_trajectories_dir as the local path
             trajectories_path = local_path
@@ -143,7 +140,7 @@ def process_trajectories_to_scripts(
             trajectory_files = []
             for root, dirs, files in os.walk(trajectories_path):
                 for file in files:
-                    if file.endswith('.jsonl'):
+                    if file.endswith(".jsonl"):
                         trajectory_files.append(os.path.join(root, file))
 
             for file_path in tqdm(trajectory_files, desc="Processing local trajectories"):

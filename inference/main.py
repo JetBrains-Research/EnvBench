@@ -107,10 +107,11 @@ async def run_experiment(cfg: DictConfig):
             shutil.rmtree(cfg_model.logging_dir)
 
     data_source = getattr(cfg_model.data_source, cfg_model.data_source.type).instantiate()
-    if first_n := os.getenv('ONLY_FIRST_N'):
+    if first_n := os.getenv("ONLY_FIRST_N"):
         n = int(first_n)
         logging.info(f"Limiting data source to first {n} examples.")
         from itertools import islice
+
         data_source = islice(data_source, n)
     os.makedirs(cfg_model.logging_dir, exist_ok=True)
 
@@ -170,7 +171,7 @@ async def run_experiment(cfg: DictConfig):
         #     repo_type="dataset",
         # )
 
-        print('Skipping uploading folder to HuggingFace, please use `hf upload` command manually.')
+        print("Skipping uploading folder to HuggingFace, please use `hf upload` command manually.")
         # import zipfile
         # TODO: fix
         #

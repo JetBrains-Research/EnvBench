@@ -28,7 +28,6 @@ from rich.traceback import install
 import wandb
 
 from env_setup_utils.analysis.scripts_viewer import generate_scripts_html_from_hf
-from env_setup_utils.analysis.traj_viewer import generate_trajectories_html_from_hf
 from env_setup_utils.analysis.view_logs import generate_logs_html_from_hf
 from env_setup_utils.process_trajectories_to_scripts import process_trajectories_to_scripts
 from evaluation.main import main as run_evaluation

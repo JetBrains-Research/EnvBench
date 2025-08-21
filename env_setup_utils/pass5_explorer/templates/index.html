@@ -702,186 +702,186 @@
 
         function displayCrossRunStats(stats) {
             const crossRunStats = document.getElementById('crossRunStats');
-            // Top row logic
-            let topRow = '';
-            if (stats.k < 5) {
-                // Only Pass@k, secondary color
-                topRow = `
-                <div class="row g-3">
-                    <div class="col-lg-4 col-md-4"></div>
-                    <div class="col-lg-4 col-md-4">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c; font-weight: 600;">
-                            <div class="stats-number">${stats.passed_repos}/${stats.total_repos}</div>
-                            <div class="stats-label">Pass@${stats.k} (${stats.pass_at_k.toFixed(1)}%)</div>
+            
+            // Check if we have split data
+            const hasSplits = stats.train && stats.test;
+            
+            function createStatsSection(sectionStats, title, titleIcon = "", bgGradient = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)") {
+                if (!sectionStats) return '';
+                
+                let sectionHtml = `<div class="mb-4">`;
+                if (title) {
+                    sectionHtml += `<h5 class="text-center mb-3">${titleIcon} ${title}</h5>`;
+                }
+                
+                // Top row logic (adapted for this section)
+                let topRow = '';
+                if (sectionStats.k < 5) {
+                    topRow = `
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-md-4"></div>
+                        <div class="col-lg-4 col-md-4">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c; font-weight: 600;">
+                                <div class="stats-number">${sectionStats.passed_repos}/${sectionStats.total_repos}<br/><span style="font-size: 0.8em;">${sectionStats.pass_at_k.toFixed(1)}%</span></div>
+                                <div class="stats-label">Pass@${sectionStats.k}</div>
+                    </div>
+                        </div>
+                        <div class="col-lg-4 col-md-4"></div>
+                </div>`;
+                } else if (sectionStats.k === 5) {
+                    let passAt5NumStr = `${sectionStats.passed_repos}/${sectionStats.total_repos}`;
+                    let passAt5Pct = sectionStats.pass_at_k !== undefined ? sectionStats.pass_at_k.toFixed(1) : '-';
+                    topRow = `
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-md-4"></div>
+                        <div class="col-lg-4 col-md-4">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #ffe082 0%, #43e97b 100%); color: #1b2e5c; font-weight: bold; border: 2px solid #43e97b; box-shadow: 0 2px 8px #43e97b22;">
+                                <div class="stats-number">${passAt5NumStr}<br/><span style="font-size: 0.8em;">${passAt5Pct}%</span></div>
+                                <div class="stats-label">Pass@5 (first 5 runs)</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-4"></div>
+                    </div>`;
+                } else {
+                    let meanPassAt5Num = sectionStats.all_samples_pass_at_5 !== undefined ? (sectionStats.all_samples_pass_at_5 / 100 * sectionStats.total_repos) : '-';
+                    let meanPassAt5NumStr = meanPassAt5Num !== '-' ? `${meanPassAt5Num.toFixed(1)}/${sectionStats.total_repos}` : '-';
+                    let meanPassAt5Pct = sectionStats.all_samples_pass_at_5 !== undefined ? sectionStats.all_samples_pass_at_5.toFixed(1) : '-';
+                    let passAt5NumStr = sectionStats.pass_at_5_repos !== undefined ? `${sectionStats.pass_at_5_repos}/${sectionStats.total_repos}` : '-';
+                    let passAt5Pct = sectionStats.pass_at_5 !== undefined ? sectionStats.pass_at_5.toFixed(1) : '-';
+                    topRow = `
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-md-4">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #ffe082 0%, #43e97b 100%); color: #1b2e5c; font-weight: bold; border: 2px solid #43e97b; box-shadow: 0 2px 8px #43e97b22;">
+                                <div class="stats-number">${passAt5NumStr}<br/><span style="font-size: 0.8em;">${passAt5Pct}%</span></div>
+                                <div class="stats-label">Pass@5 (first 5 runs)</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-4">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c; font-weight: 600;">
+                                <div class="stats-number">${sectionStats.passed_repos}/${sectionStats.total_repos}<br/><span style="font-size: 0.8em;">${sectionStats.pass_at_k.toFixed(1)}%</span></div>
+                                <div class="stats-label">Pass@${sectionStats.k}</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-4">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c; font-weight: 600;">
+                                <div class="stats-number">${meanPassAt5NumStr}<br/><span style="font-size: 0.8em;">${meanPassAt5Pct}%</span></div>
+                                <div class="stats-label">Mean Pass@5 (all samples)</div>
+                            </div>
+                    </div>
+                </div>`;
+            }
+            
+                                // Main metrics row
+                let mainMetricsRow = `
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="stats-card" style="background: ${bgGradient}; color: #fff;">
+                                <div class="stats-number">${sectionStats.mean_issue_resolution_rate !== undefined ? sectionStats.mean_issue_resolution_rate.toFixed(2) : '-'}±${sectionStats.std_mean_issue_resolution_rate !== undefined ? sectionStats.std_mean_issue_resolution_rate.toFixed(2) : '-'}%</div>
+                                <div class="stats-label">Mean Issue Resolution Rate</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c;">
+                                <div class="stats-number">${sectionStats.total_issue_resolution_rate !== undefined ? sectionStats.total_issue_resolution_rate.toFixed(2) : '-'}±${sectionStats.std_total_issue_resolution_rate !== undefined ? sectionStats.std_total_issue_resolution_rate.toFixed(2) : '-'}%</div>
+                                <div class="stats-label">Total Issue Resolution Rate</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c;">
+                                <div class="stats-number">${sectionStats.avg_errs.toFixed(2)}±${sectionStats.std_avg_errs.toFixed(2)}</div>
+                                <div class="stats-label">avgErrors</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-4"></div>
-                </div>`;
-            } else if (stats.k === 5) {
-                // Only Pass@5, primary color, always show value
-                let passAt5NumStr = `${stats.passed_repos}/${stats.total_repos}`;
-                let passAt5Pct = stats.pass_at_k !== undefined ? stats.pass_at_k.toFixed(1) : '-';
-                topRow = `
-                <div class="row g-3">
-                    <div class="col-lg-4 col-md-4"></div>
-                    <div class="col-lg-4 col-md-4">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #ffe082 0%, #43e97b 100%); color: #1b2e5c; font-weight: bold; border: 2px solid #43e97b; box-shadow: 0 2px 8px #43e97b22;">
-                            <div class="stats-number">${passAt5NumStr}</div>
-                            <div class="stats-label">Pass@5 (first 5 runs) (${passAt5Pct}%)</div>
+                `;
+                
+                // Avg row
+                let avgPassedPct = sectionStats.total_repos > 0 ? ((sectionStats.avg_passed_repos || 0) / sectionStats.total_repos * 100).toFixed(1) : '0.0';
+                let avgIssuesPct = sectionStats.total_repos > 0 ? ((sectionStats.avg_has_issues || 0) / sectionStats.total_repos * 100).toFixed(1) : '0.0';
+                let avgFailedPct = sectionStats.total_repos > 0 ? ((sectionStats.avg_failed || 0) / sectionStats.total_repos * 100).toFixed(1) : '0.0';
+                
+                let avgRow = `
+                    <div class="row g-3 mt-2">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #ffe082 100%); color: #205c20; font-weight: bold; border: 2px solid #43e97b; box-shadow: 0 2px 8px #43e97b22;">
+                                <div class="stats-number" style="font-size:2.1em;">${sectionStats.avg_passed_repos || 0}±${sectionStats.std_passed || 0}<br/><span style="font-size: 0.8em;">${avgPassedPct}%</span></div>
+                                <div class="stats-label">Avg Passed</div>
+                            </div>
                         </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%); color: #bfa100;">
+                                <div class="stats-number">${sectionStats.avg_has_issues || 0}±${sectionStats.std_has_issues || 0}<br/><span style="font-size: 0.8em;">${avgIssuesPct}%</span></div>
+                        <div class="stats-label">Avg Has Issues</div>
                     </div>
-                    <div class="col-lg-4 col-md-4"></div>
-                </div>`;
+                </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="stats-card" style="background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #b71c1c;">
+                                <div class="stats-number">${sectionStats.avg_failed || 0}±${sectionStats.std_failed || 0}<br/><span style="font-size: 0.8em;">${avgFailedPct}%</span></div>
+                        <div class="stats-label">Avg Failed</div>
+                    </div>
+                    </div>
+                </div>
+            `;
+            
+                sectionHtml += topRow + mainMetricsRow + avgRow + '</div>';
+                return sectionHtml;
+            }
+            
+            let allStatsHtml = '';
+            
+            if (hasSplits) {
+                // Display all three: Full, Train, Test
+                allStatsHtml += createStatsSection(stats.full, "Full Dataset", "📊", "linear-gradient(135deg, #4e8cff 0%, #1b2e5c 100%)");
+                allStatsHtml += createStatsSection(stats.train, "Train Split", "🚂", "linear-gradient(135deg, #28a745 0%, #20c997 100%)");
+                allStatsHtml += createStatsSection(stats.test, "Test Split", "🧪", "linear-gradient(135deg, #dc3545 0%, #fd7e14 100%)");
+                
+                // Add split info
+                if (stats.train && stats.test) {
+                    allStatsHtml += `
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 
+                                <strong>Split Info:</strong> 
+                                Train repos matched: ${stats.train.total_repos}/${stats.train.split_total || 'unknown'} | 
+                                Test repos matched: ${stats.test.total_repos}/${stats.test.split_total || 'unknown'}
+                            </div>
+                        </div>
+                    </div>`;
+                }
             } else {
-                // k > 5: Pass@5 (primary), Pass@k and Mean Pass@5 (secondary)
-                let meanPassAt5Num = stats.all_samples_pass_at_5 !== undefined ? (stats.all_samples_pass_at_5 / 100 * stats.total_repos) : '-';
-                let meanPassAt5NumStr = meanPassAt5Num !== '-' ? `${meanPassAt5Num.toFixed(1)}/${stats.total_repos}` : '-';
-                let meanPassAt5Pct = stats.all_samples_pass_at_5 !== undefined ? stats.all_samples_pass_at_5.toFixed(1) : '-';
-                let passAt5NumStr = stats.pass_at_5_repos !== undefined ? `${stats.pass_at_5_repos}/${stats.total_repos}` : '-';
-                let passAt5Pct = stats.pass_at_5 !== undefined ? stats.pass_at_5.toFixed(1) : '-';
-                topRow = `
-                <div class="row g-3">
-                    <div class="col-lg-4 col-md-4">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #ffe082 0%, #43e97b 100%); color: #1b2e5c; font-weight: bold; border: 2px solid #43e97b; box-shadow: 0 2px 8px #43e97b22;">
-                            <div class="stats-number">${passAt5NumStr}</div>
-                            <div class="stats-label">Pass@5 (first 5 runs) (${passAt5Pct}%)</div>
+                // Fallback to original stats if no splits available
+                allStatsHtml += createStatsSection(stats, null, "", "linear-gradient(135deg, #4e8cff 0%, #1b2e5c 100%)");
+                
+                if (stats.error) {
+                    allStatsHtml += `
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                <strong>Split Data Unavailable:</strong> ${stats.error}
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-lg-4 col-md-4">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c; font-weight: 600;">
-                            <div class="stats-number">${stats.passed_repos}/${stats.total_repos}</div>
-                            <div class="stats-label">Pass@${stats.k} (${stats.pass_at_k.toFixed(1)}%)</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-4">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c; font-weight: 600;">
-                            <div class="stats-number">${meanPassAt5NumStr}</div>
-                            <div class="stats-label">Mean Pass@5 (all samples) (${meanPassAt5Pct}%)</div>
-                        </div>
-                    </div>
-                </div>`;
+                    </div>`;
+                }
             }
-            // Main metrics row (mean/total issue resolution, avgErrors)
-            let mainMetricsRow = `
-                <div class="row g-3">
-                    <div class="col-lg-4 col-md-6">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #4e8cff 0%, #1b2e5c 100%); color: #fff;">
-                            <div class="stats-number">${stats.mean_issue_resolution_rate !== undefined ? stats.mean_issue_resolution_rate.toFixed(2) : '-'}%</div>
-                            <div class="stats-label">Mean Issue Resolution Rate</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c;">
-                            <div class="stats-number">${stats.total_issue_resolution_rate !== undefined ? stats.total_issue_resolution_rate.toFixed(2) : '-'}%</div>
-                            <div class="stats-label">Total Issue Resolution Rate</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #e3eafc 0%, #b6c8e6 100%); color: #1b2e5c;">
-                            <div class="stats-number">${stats.avg_errs.toFixed(2)}±${stats.std_avg_errs.toFixed(2)}</div>
-                            <div class="stats-label">avgErrors</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            // Last row: Avg Passed, Avg Has Issues, Avg Failed (Avg Passed stands out)
-            let avgRow = `
-                <div class="row g-3 mt-2">
-                    <div class="col-lg-4 col-md-6">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #ffe082 100%); color: #205c20; font-weight: bold; border: 2px solid #43e97b; box-shadow: 0 2px 8px #43e97b22;">
-                            <div class="stats-number" style="font-size:2.1em;">${stats.avg_passed_repos || 0}±${stats.std_passed || 0}</div>
-                            <div class="stats-label">Avg Passed</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%); color: #bfa100;">
-                            <div class="stats-number">${stats.avg_has_issues || 0}±${stats.std_has_issues || 0}</div>
-                            <div class="stats-label">Avg Has Issues</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="stats-card" style="background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #b71c1c;">
-                            <div class="stats-number">${stats.avg_failed || 0}±${stats.std_failed || 0}</div>
-                            <div class="stats-label">Avg Failed</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            // Pie chart after avg row
-            let pieHtml = '';
-            {
-                const avgPass = stats.avg_passed_repos || 0;
-                const avgIssues = stats.avg_has_issues || 0;
-                const avgFailed = stats.avg_failed || 0;
-                const stdPass = stats.std_passed || 0;
-                const stdIssues = stats.std_has_issues || 0;
-                const stdFailed = stats.std_failed || 0;
-                const pieData = [{
-                    values: [avgPass, avgIssues, avgFailed],
-                    labels: [
-                        `Avg Passed: ${avgPass.toFixed(1)}±${stdPass.toFixed(1)}`,
-                        `Avg Has Issues: ${avgIssues.toFixed(1)}±${stdIssues.toFixed(1)}`,
-                        `Avg Failed: ${avgFailed.toFixed(1)}±${stdFailed.toFixed(1)}`
-                    ],
-                    type: 'pie',
-                    marker: {
-                        colors: ['#43e97b', '#fff9c4', '#ffcdd2']
-                    },
-                    textinfo: 'label+percent',
-                    textposition: 'outside',
-                    hole: 0.4
-                }];
-                const pieLayout = {
-                    height: 320,
-                    margin: { t: 20, b: 20, l: 20, r: 20 },
-                    showlegend: true
-                };
-                pieHtml = '<div class="row mb-3"><div class="col-12"><div id="summaryPieChart" style="height: 320px;"></div></div></div>';
-                setTimeout(() => { Plotly.newPlot('summaryPieChart', pieData, pieLayout); }, 0);
-            }
-            crossRunStats.innerHTML = topRow + mainMetricsRow + avgRow + pieHtml;
-            // Draw pie chart always (after DOM update)
-            {
-                const avgPass = stats.avg_passed_repos || 0;
-                const avgIssues = stats.avg_has_issues || 0;
-                const avgFailed = stats.avg_failed || 0;
-                const stdPass = stats.std_passed || 0;
-                const stdIssues = stats.std_has_issues || 0;
-                const stdFailed = stats.std_failed || 0;
-                const pieData = [{
-                    values: [avgPass, avgIssues, avgFailed],
-                    labels: [
-                        `Avg Passed: ${avgPass.toFixed(1)}±${stdPass.toFixed(1)}`,
-                        `Avg Has Issues: ${avgIssues.toFixed(1)}±${stdIssues.toFixed(1)}`,
-                        `Avg Failed: ${avgFailed.toFixed(1)}±${stdFailed.toFixed(1)}`
-                    ],
-                    type: 'pie',
-                    marker: {
-                        colors: ['#43e97b', '#fff9c4', '#ffcdd2']
-                    },
-                    textinfo: 'label+percent',
-                    textposition: 'outside',
-                    hole: 0.4
-                }];
-                const pieLayout = {
-                    height: 320,
-                    margin: { t: 20, b: 20, l: 20, r: 20 },
-                    showlegend: true
-                };
-                setTimeout(() => { Plotly.newPlot('summaryPieChart', pieData, pieLayout); }, 0);
-            }
+            
+            crossRunStats.innerHTML = allStatsHtml;
         }
 
         function displayRunsTable(fileAnalyses) {
             const runsTable = document.getElementById('runsTable');
             
-            const tableRows = Object.entries(fileAnalyses).map(([filePath, analysis]) => {
-                // Use full path but remove /results.jsonl
-                const runName = filePath.replace('/results.jsonl', '');
+            // Check if we have split data in the first analysis
+            const firstAnalysis = Object.values(fileAnalyses)[0];
+            const hasSplits = firstAnalysis && firstAnalysis.train && firstAnalysis.test;
+            
+            function createTableRow(filePath, analysis, splitType = '') {
+                const runName = filePath.replace('/results.jsonl', '') + (splitType ? ` (${splitType})` : '');
                 const total = analysis.total;
-                const passedPct = ((analysis.passed / total) * 100).toFixed(1);
-                const issuesPct = ((analysis.has_issues / total) * 100).toFixed(1);
-                const failedPct = ((analysis.failed / total) * 100).toFixed(1);
+                const passedPct = total > 0 ? ((analysis.passed / total) * 100).toFixed(1) : '0.0';
+                const issuesPct = total > 0 ? ((analysis.has_issues / total) * 100).toFixed(1) : '0.0';
+                const failedPct = total > 0 ? ((analysis.failed / total) * 100).toFixed(1) : '0.0';
                 
                 return `
                     <tr>
@@ -893,10 +893,39 @@
                         <td>${total}</td>
                     </tr>
                 `;
-            }).join('');
+            }
+            
+            let tableRows = '';
+            
+            if (hasSplits) {
+                // Show Full, Train, Test for each file
+                Object.entries(fileAnalyses).forEach(([filePath, analysisSet]) => {
+                    // Full dataset row
+                    tableRows += createTableRow(filePath, analysisSet.full, 'Full');
+                    // Train split row
+                    if (analysisSet.train) {
+                        tableRows += createTableRow(filePath, analysisSet.train, 'Train');
+                    }
+                    // Test split row
+                    if (analysisSet.test) {
+                        tableRows += createTableRow(filePath, analysisSet.test, 'Test');
+                    }
+                    // Add a separator row between different files
+                    if (Object.keys(fileAnalyses).length > 1) {
+                        tableRows += '<tr style="height: 10px;"><td colspan="6" style="background-color: #f8f9fa; border: none;"></td></tr>';
+                    }
+                });
+            } else {
+                // Fallback to original format
+                Object.entries(fileAnalyses).forEach(([filePath, analysis]) => {
+                    tableRows += createTableRow(filePath, analysis);
+                });
+            }
+
+            const headerText = hasSplits ? "Runs Summary (with Train/Test Splits)" : "Runs Summary";
 
             runsTable.innerHTML = `
-                <h4 class="mb-3">Runs Summary</h4>
+                <h4 class="mb-3">${headerText}</h4>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -920,40 +949,125 @@
         function displayIndividualCharts(fileAnalyses) {
             const individualCharts = document.getElementById('individualCharts');
             
-            const chartsHtml = Object.entries(fileAnalyses).map(([filePath, analysis]) => {
-                const chartId = `chart-${filePath.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            // Check if we have split data
+            const firstAnalysis = Object.values(fileAnalyses)[0];
+            const hasSplits = firstAnalysis && firstAnalysis.train && firstAnalysis.test;
+            
+            const chartsHtml = Object.entries(fileAnalyses).map(([filePath, analysisSet]) => {
+                const fileName = filePath.split('/').pop();
+                const fileId = filePath.replace(/[^a-zA-Z0-9]/g, '_');
+                
+                if (hasSplits) {
+                    // Create charts for full, train, and test
+                    return `
+                        <div class="col-12 mb-4">
+                            <div class="chart-container">
+                                <h5>${fileName}</h5>
+                                <div class="row">
+                                    <!-- Full Dataset Chart -->
+                                    <div class="col-md-4">
+                                        <h6 class="text-center mb-3">📊 Full Dataset</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-4">
+                                                <span class="status-badge status-passed">${analysisSet.full.passed}</span>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="status-badge status-issues">${analysisSet.full.has_issues}</span>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="status-badge status-failed">${analysisSet.full.failed}</span>
+                                            </div>
+                                        </div>
+                                        <div id="chart-${fileId}-full"></div>
+                                    </div>
+                                    
+                                    <!-- Train Split Chart -->
+                                    <div class="col-md-4">
+                                        <h6 class="text-center mb-3">🚂 Train Split</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-4">
+                                                <span class="status-badge status-passed">${analysisSet.train ? analysisSet.train.passed : 0}</span>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="status-badge status-issues">${analysisSet.train ? analysisSet.train.has_issues : 0}</span>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="status-badge status-failed">${analysisSet.train ? analysisSet.train.failed : 0}</span>
+                                            </div>
+                                        </div>
+                                        <div id="chart-${fileId}-train"></div>
+                                    </div>
+                                    
+                                    <!-- Test Split Chart -->
+                                    <div class="col-md-4">
+                                        <h6 class="text-center mb-3">🧪 Test Split</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-4">
+                                                <span class="status-badge status-passed">${analysisSet.test ? analysisSet.test.passed : 0}</span>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="status-badge status-issues">${analysisSet.test ? analysisSet.test.has_issues : 0}</span>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="status-badge status-failed">${analysisSet.test ? analysisSet.test.failed : 0}</span>
+                                            </div>
+                                        </div>
+                                        <div id="chart-${fileId}-test"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Fallback to original single chart format
                 return `
                     <div class="col-md-6 mb-4">
                         <div class="chart-container">
-                            <h5>${filePath.split('/').pop()}</h5>
+                                <h5>${fileName}</h5>
                             <div class="row mb-3">
                                 <div class="col-4">
-                                    <span class="status-badge status-passed">${analysis.passed} Passed</span>
+                                        <span class="status-badge status-passed">${analysisSet.passed} Passed</span>
                                 </div>
                                 <div class="col-4">
-                                    <span class="status-badge status-issues">${analysis.has_issues} Has Issues</span>
+                                        <span class="status-badge status-issues">${analysisSet.has_issues} Has Issues</span>
                                 </div>
                                 <div class="col-4">
-                                    <span class="status-badge status-failed">${analysis.failed} Failed</span>
+                                        <span class="status-badge status-failed">${analysisSet.failed} Failed</span>
                                 </div>
                             </div>
-                            <div id="${chartId}"></div>
+                                <div id="chart-${fileId}"></div>
                         </div>
                     </div>
                 `;
+                }
             }).join('');
 
+            const headerText = hasSplits ? "Individual Run Results (with Train/Test Splits)" : "Individual Run Results";
+
             individualCharts.innerHTML = `
-                <h4 class="mb-4">Individual Run Results</h4>
+                <h4 class="mb-4">${headerText}</h4>
                 <div class="row">
                     ${chartsHtml}
                 </div>
             `;
 
             // Create pie charts
-            Object.entries(fileAnalyses).forEach(([filePath, analysis]) => {
-                const chartId = `chart-${filePath.replace(/[^a-zA-Z0-9]/g, '_')}`;
-                createPieChart(chartId, analysis);
+            Object.entries(fileAnalyses).forEach(([filePath, analysisSet]) => {
+                const fileId = filePath.replace(/[^a-zA-Z0-9]/g, '_');
+                
+                if (hasSplits) {
+                    // Create charts for each split
+                    createPieChart(`chart-${fileId}-full`, analysisSet.full);
+                    if (analysisSet.train) {
+                        createPieChart(`chart-${fileId}-train`, analysisSet.train);
+                    }
+                    if (analysisSet.test) {
+                        createPieChart(`chart-${fileId}-test`, analysisSet.test);
+                    }
+                } else {
+                    // Original single chart
+                    createPieChart(`chart-${fileId}`, analysisSet);
+                }
             });
 
             // After the charts, add documentation for metrics
@@ -961,14 +1075,16 @@
                 <div class="mt-5 p-4 bg-light rounded shadow-sm">
                     <h5>Metrics Documentation</h5>
                     <ul>
-                        <li><b>Pass@k</b>: Number and percent of unique repositories that passed (exit_code=0, issues=0) in any of the selected runs.</li>
-                        <li><b>Pass@5</b>: Number and percent of unique repositories that passed in at least one of the first 5 runs.</li>
-                        <li><b>Avg Passed</b>: Average number of repositories that passed per run (± standard deviation).</li>
-                        <li><b>Avg Has Issues</b>: Average number of repositories per run that had exit_code=0 but nonzero issues (± std).</li>
-                        <li><b>Avg Failed</b>: Average number of repositories per run that failed (exit_code≠0) (± std).</li>
-                        <li><b>Avg Errors</b>: Average number of issues for all repositories with exit_code=0, averaged per run (± std).</li>
+                        <li><b>Pass@k</b>: Shows both absolute numbers (X/total) and percentage (X%). Represents unique repositories that passed (exit_code=0, issues=0) in any of the selected runs.</li>
+                        <li><b>Pass@5</b>: Shows both absolute numbers (X/total) and percentage (X%). Represents unique repositories that passed in at least one of the first 5 runs.</li>
+                        <li><b>Mean Pass@5 (all samples)</b>: Shows both absolute numbers (X/total) and percentage (X%). Expected pass@5 rate computed mathematically over all possible samples of 5 runs.</li>
+                        <li><b>Avg Passed</b>: Shows both absolute numbers and percentage. Average number of repositories that passed per run (± standard deviation).</li>
+                        <li><b>Avg Has Issues</b>: Shows both absolute numbers and percentage. Average number of repositories per run that had exit_code=0 but nonzero issues (± std).</li>
+                        <li><b>Avg Failed</b>: Shows both absolute numbers and percentage. Average number of repositories per run that failed (exit_code≠0) (± std).</li>
+                        <li><b>avgErrors</b>: Average number of issues for all repositories with exit_code=0, averaged per run (± std).</li>
                         <li><b>Total Issue Resolution Rate</b>: 100% minus the ratio of the sum of remaining issues to the sum of initial issues, across all repositories in all runs. Measures overall progress in resolving issues.</li>
                         <li><b>Mean Issue Resolution Rate</b>: The mean of (1 - (remaining issues / initial issues)) across all repositories and runs. Reflects the average fraction of issues resolved per repository.</li>
+                        <li><b>Train/Test Splits</b>: When available, metrics are computed separately for repositories in the train and test splits from the envbench-zeroshot-rl dataset.</li>
                     </ul>
                 </div>
             `;
