@@ -145,52 +145,52 @@ async def run_opensource(
         },
     }
 
-    start_time = time.time()
+    start_time = time.perf_counter()
+    created_time = start_time
     container = None
 
     try:
         # Run the build script inside a Docker container with asyncio timeout
         logging.info(f"Starting Docker container for {repo_name}")
 
-        async def run_container_with_timeout():
+        # Measure how long container creation takes
+        container = await docker_client.containers.create(config=container_config)
+        created_time = time.perf_counter()
+        create_duration = created_time - start_time
+        logging.info(f"Container created: {container.id[:12]} (took {create_duration:.2f}s)")
+
+        await container.start()
+        logging.info(f"Container {container.id[:12]} started in {time.perf_counter() - start_time:.2f}s")
+
+        # Define the part that should be time-limited
+        async def stream_and_wait_container():
             nonlocal container
-            # Create container
-            container = await docker_client.containers.create(config=container_config)
-            logging.info(f"Container created: {container.id[:12]}")
 
-            # Start container
-            await container.start()
-            logging.info("Container started")
+            # logs_buffer = []
+            # async for log_chunk in container.log(stdout=True, stderr=True, follow=True):
+            #     log_line = log_chunk.strip()
+            #     if log_line:
+            #         decoded_line = log_line if isinstance(log_line, str) else log_line.decode("utf-8")
+            #         logging.info(f"[Docker] {decoded_line}")
+            #         logs_buffer.append(decoded_line)
 
-            # Stream logs with timeout
-            logs_buffer = []
-            async for log_chunk in container.log(stdout=True, stderr=True, follow=True):
-                log_line = log_chunk.strip()
-                if log_line:
-                    decoded_line = log_line if isinstance(log_line, str) else log_line.decode("utf-8")
-                    logging.info(f"[Docker] {decoded_line}")
-                    logs_buffer.append(decoded_line)
-
-            # Wait for container to finish
-            result = await container.wait()
+            # Wait for the container to finish
+            result = await container.wait(timeout=cfg.docker.container_timeout)
             exit_code = result.get("StatusCode", 1)
 
-            # Get all logs
+            # Collect final logs
             all_logs = await container.log(stdout=True, stderr=True, follow=False)
-            container_logs = "".join([
-                log.decode("utf-8") if isinstance(log, bytes) else log
-                for log in all_logs
-            ])
+            container_logs = "".join(log.decode("utf-8") if isinstance(log, bytes) else log for log in all_logs)
 
             return exit_code, container_logs
 
-        # Apply asyncio timeout
+        # Apply timeout only to execution phase
         exit_code, container_logs = await asyncio.wait_for(
-            run_container_with_timeout(),
-            timeout=cfg.docker.container_timeout
+            stream_and_wait_container(),
+            timeout=cfg.docker.container_timeout,
         )
 
-        logging.info(f"Container finished with exit code {exit_code}")
+        logging.info(f"Container finished with exit code {exit_code} in {time.perf_counter() - created_time:.2f} seconds")
         json_result["exit_code"] = exit_code
         json_result["container_logs"] = container_logs
 
@@ -209,7 +209,7 @@ async def run_opensource(
             logging.error(f"Error reading results.json: {str(e)}")
 
     except asyncio.TimeoutError:
-        logging.error(f"Container timeout ({cfg.docker.container_timeout}s) reached")
+        logging.error(f"Container timeout ({cfg.docker.container_timeout}s) reached (actual duration {time.perf_counter() - created_time:.2f}s)")
         json_result["exit_code"] = cfg.exit_codes.timeout
         json_result["container_logs"] = f"Container execution timeout after {cfg.docker.container_timeout} seconds"
     except DockerError as e:
@@ -232,7 +232,7 @@ async def run_opensource(
         # Close Docker client
         await docker_client.close()
 
-        end_time = time.time()
+        end_time = time.perf_counter()
         execution_time = end_time - start_time
         json_result["execution_time"] = execution_time
         logging.info(f"Total execution time: {execution_time:.2f} seconds")
