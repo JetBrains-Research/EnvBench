@@ -74,7 +74,7 @@ async def run_opensource(
 
     if bootstrap_script is None:
         bootstrap_script = (
-            read_script("python_baseline.sh") if cfg.language == "python" else read_script("jvm_baseline.sh")
+            read_script("python_baseline.sh") if cfg.language in ["python", "repo2run"] else read_script("jvm_baseline.sh")
         )
         logging.info(f"Using default bootstrap script for {cfg.language}")
 
@@ -96,6 +96,7 @@ async def run_opensource(
     build_script_functions = {
         "jvm": lambda: read_script("jvm_build.sh"),
         "python": lambda: read_script("python_build.sh"),
+        "repo2run": lambda: read_script("repo2run.sh"),
     }
 
     if cfg.language not in build_script_functions:
@@ -205,6 +206,12 @@ async def run_opensource(
                     logging.info(f"Found {json_result.get('issues_count', '??')} issues")
             else:
                 logging.warning("results.json not found")
+                results_path = os.path.join(repo_path, "build_output", "pytest_output.txt")
+                if os.path.exists(results_path):
+                    with open(results_path) as f:
+                        pytest_output = f.read()
+                        json_result["pytest_output"] = pytest_output
+                        logging.info(f"Found pytest output: {pytest_output}")
         except (json.JSONDecodeError, FileNotFoundError) as e:
             logging.error(f"Error reading results.json: {str(e)}")
 
@@ -376,6 +383,7 @@ def main(cfg: DictConfig) -> None:
         to_absolute_path(cfg.operation.dirs.json_results),
         "results.jsonl",
     )
+    os.makedirs(os.path.dirname(jsonl_path), exist_ok=True)
 
     with jsonlines.open(jsonl_path, "w") as writer:
         for file in os.listdir(os.path.join(to_absolute_path(cfg.operation.dirs.json_results), "results")):
