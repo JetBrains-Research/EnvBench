@@ -1,0 +1,9 @@
+defaults:
+  - python-bash
+  - benchmark/repo2run
+
+tag: oss/python-zeroshot-repo2run
+
+inference:
+  agent:
+    agent_type: procedural-python

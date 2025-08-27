@@ -1,0 +1,18 @@
+# @package _global_
+inference:
+  data_source:
+    type: hf
+    hf:
+      _target_: env_setup_utils.data_sources.HFDataSource
+      hub_name: JetBrains-Research/envbench-zeroshot-rl
+      configs:
+        - repo2run
+      splits:
+        - test
+
+evaluation:
+  language: repo2run
+
+  docker:
+    image:
+      repo2run: 'ghcr.io/jetbrains-research/envbench-python:latest'

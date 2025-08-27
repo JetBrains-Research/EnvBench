@@ -54,6 +54,21 @@ def remove_bad_commands(script: str) -> str:
     return "\n".join(res)
 
 
+async def _pull_image(image: str):
+    docker_client = aiodocker.Docker()
+    try:
+        await docker_client.images.inspect(image)
+        logging.info(f"Image '{image}' already exists locally.")
+    except DockerError as e:
+        if e.status == 404:
+            logging.info(f"Pulling image '{image}'...")
+            await docker_client.images.pull(image)
+            logging.info(f"Image '{image}' pulled successfully.")
+        else:
+            logging.error(f"Error retrieving image '{image}': {e}")
+            raise
+
+
 async def run_opensource(
     repo_downloader: RepoDownloader,
     repo_name: str,
@@ -359,6 +374,9 @@ def main(cfg: DictConfig) -> None:
     # Select evaluation tool
     if cfg.eval_tool not in eval_tools:
         raise ValueError(f"Unknown evaluation tool: {cfg.eval_tool}. Supported tools are: {list(eval_tools.keys())}")
+
+    # Pull docker image
+    asyncio.run(_pull_image(cfg.docker.image[cfg.language]))
 
     # Run async batch processing
     func = eval_tools[cfg.eval_tool]

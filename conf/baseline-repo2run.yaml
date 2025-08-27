@@ -1,17 +1,13 @@
 defaults:
-  - base
+  - python-bash
+  - benchmark/repo2run
   - _self_
+
+tag: oss/baseline-repo2run
 
 skip_inference: true
 skip_processing: true
 
-tag: oss/repo2run-baseline
-
 evaluation:
-  language: repo2run
-  input:
-    mode: local
-    local: repo2run-baseline.jsonl
-  docker:
-    image:
-      repo2run: 'ghcr.io/jetbrains-research/envbench-python'
+  hf:
+    path_in_repo: repo2run/baseline/scripts.jsonl
