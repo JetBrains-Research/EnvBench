@@ -85,6 +85,9 @@ async def run_opensource(
         "issues_count": 0,
     }
 
+    if cfg.language == "repo2run":
+        json_result["pytest_output"] = None
+
     logging.info(f"Processing {repo_name}@{commit_sha}")
 
     if bootstrap_script is None:
