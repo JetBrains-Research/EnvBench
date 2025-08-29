@@ -1,0 +1,13 @@
+defaults:
+  - python-bash
+  - benchmark/repo2run
+  - _self_
+
+tag: oss/empty-repo2run
+
+skip_inference: true
+skip_processing: true
+
+evaluation:
+  hf:
+    path_in_repo: repo2run/empty/scripts.jsonl

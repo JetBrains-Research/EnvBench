@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import stat
 import time
+import aiohttp
 from typing import Optional
 
 import aiodocker
@@ -85,9 +86,6 @@ async def run_opensource(
         "issues_count": 0,
     }
 
-    if cfg.language == "repo2run":
-        json_result["pytest_output"] = None
-
     logging.info(f"Processing {repo_name}@{commit_sha}")
 
     if bootstrap_script is None:
@@ -152,7 +150,11 @@ async def run_opensource(
 
     # Setup a docker client
     logging.info("Setting up Docker client")
-    docker_client = aiodocker.Docker()
+    docker_client = aiodocker.Docker(session=aiohttp.ClientSession(
+        connector=aiohttp.UnixConnector('/var/run/docker.sock'),
+        timeout=aiohttp.ClientTimeout(total=cfg.docker.container_timeout,
+                                      sock_connect=cfg.docker.create_container_timeout))
+    )
 
     # Prepare container config
     container_config = {
@@ -222,18 +224,13 @@ async def run_opensource(
                     for key in build_results:
                         json_result[key] = build_results[key]
                     logging.info(f"Found {json_result.get('issues_count', '??')} issues")
-            else:
-                logging.warning("results.json not found")
-                results_path = os.path.join(repo_path, "build_output", "pytest_output.txt")
-                if os.path.exists(results_path):
-                    with open(results_path) as f:
-                        pytest_output = f.read()
-                        json_result["pytest_output"] = pytest_output
-                        logging.info(f"Found pytest output: {pytest_output}")
+                if cfg.language == "repo2run":
+                    json_result["issues_count"] = sum(1 for _ in json_result.get("pytest", {}).get("collectors", []) if _.get("outcome") == "failed")
         except (json.JSONDecodeError, FileNotFoundError) as e:
             logging.error(f"Error reading results.json: {str(e)}")
 
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as e:
+        logging.error(f"Timeout error: {str(e)}")
         logging.error(f"Container timeout ({cfg.docker.container_timeout}s) reached (actual duration {time.perf_counter() - created_time:.2f}s)")
         json_result["exit_code"] = cfg.exit_codes.timeout
         json_result["container_logs"] = f"Container execution timeout after {cfg.docker.container_timeout} seconds"
