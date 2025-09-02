@@ -37,6 +37,9 @@ class BaseEnvSetupToolkit(BaseToolkit, abc.ABC):
     async def clean(self) -> None:
         await self.bash_executor.clean()
 
+    async def restart_container(self) -> None:
+        await self.bash_executor.restart_container()
+
     async def _execute_bash_command(self, command: str, add_to_history: bool = True) -> Tuple[str, int]:
         return await self.bash_executor.execute_bash_command(command, add_to_history=add_to_history)
 

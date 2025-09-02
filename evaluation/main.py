@@ -21,6 +21,7 @@ import pandas as pd  # type: ignore[import-untyped]
 
 from env_setup_utils.repo_downloader import RepoDownloader
 
+load_dotenv()
 
 class ScriptExceptionError(Exception):
     def __init__(self, message: str):
@@ -151,7 +152,7 @@ async def run_opensource(
     # Setup a docker client
     logging.info("Setting up Docker client")
     docker_client = aiodocker.Docker(session=aiohttp.ClientSession(
-        connector=aiohttp.UnixConnector('/var/run/docker.sock'),
+        connector=aiohttp.UnixConnector(os.environ.get("DOCKER_HOST", '/var/run/docker.sock')),
         timeout=aiohttp.ClientTimeout(total=cfg.docker.container_timeout,
                                       sock_connect=cfg.docker.create_container_timeout))
     )
@@ -428,5 +429,4 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    load_dotenv()
     main()

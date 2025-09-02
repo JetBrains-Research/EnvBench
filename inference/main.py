@@ -164,31 +164,30 @@ async def run_experiment(cfg: DictConfig):
 
     if cfg_model.hf.upload:
         hf_api = HfApi()
-        # hf_api.upload_folder(  # failing to upload_folder
-        #     folder_path=cfg_model.logging_dir,
-        #     path_in_repo=os.path.join(cfg_model.hf.path_in_repo, "trajectories"),
-        #     repo_id=cfg_model.hf.repo_id,
-        #     repo_type="dataset",
-        # )
-
-        print("Skipping uploading folder to HuggingFace, please use `hf upload` command manually.")
-        # import zipfile
-        # TODO: fix
-        #
-        # zip_path = os.path.join(cfg_model.logging_dir, "trajectories.zip")
-        # with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-        #     for root, _, files in os.walk(cfg_model.logging_dir):
-        #         for file in files:
-        #             file_path = os.path.join(root, file)
-        #             arcname = os.path.relpath(file_path, cfg_model.logging_dir)
-        #             zipf.write(file_path, arcname=arcname)
-        #
-        # hf_api.upload_file(
-        #     path_or_fileobj=zip_path,
-        #     path_in_repo=os.path.join(cfg_model.hf.path_in_repo, "trajectories.zip"),
-        #     repo_id=cfg_model.hf.repo_id,
-        #     repo_type="dataset",
-        # )
+        try:
+            # we need to set up the folder structure locally for upload_large_folder
+            with tempfile.TemporaryDirectory() as temp_upload_dir:
+                target_path = os.path.join(temp_upload_dir, cfg_model.hf.path_in_repo, "trajectories")
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                shutil.copytree(cfg_model.logging_dir, target_path)
+                
+                hf_api.upload_large_folder(
+                    folder_path=temp_upload_dir,
+                    repo_id=cfg_model.hf.repo_id,
+                    repo_type="dataset",
+                )
+            
+        except Exception as e:
+            try:
+                hf_api.upload_folder(
+                folder_path=cfg_model.logging_dir,
+                path_in_repo=os.path.join(cfg_model.hf.path_in_repo, "trajectories"),
+                repo_id=cfg_model.hf.repo_id,
+                repo_type="dataset",
+            )
+            except Exception as e:
+                logging.error(f"Error uploading folder to HuggingFace: {e}")
+                print("Skipping uploading folder to HuggingFace, please use `hf upload` command manually.")
 
         try:
             config_name = hydra.core.config_store.ConfigSource.config_name

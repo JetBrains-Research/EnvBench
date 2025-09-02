@@ -19,7 +19,7 @@ from inference.src.agents.python.agent import EnvSetupPythonAgent
 from inference.src.agents.shellcheck.agent import ShellcheckAgent
 from inference.src.agents.verl_agent.agent import VerlAgent
 from inference.src.toolkits.base import BaseEnvSetupToolkit
-
+from inference.src.agents.try_again.agent import TryAgainAgent
 
 class ModelConfig(InstantiatableConfig[BaseChatModel], extra=Extra.allow): ...
 
@@ -35,6 +35,7 @@ class EnvSetupAgentType(Enum):
     readonly = "readonly"
     readonly_v2 = "readonly_v2"
     verl = "verl"
+    try_again = "try_again"
 
 
 class EnvSetupAgentConfig(BaseModel, extra=Extra.allow):
@@ -151,6 +152,13 @@ class EnvSetupAgentConfig(BaseModel, extra=Extra.allow):
             return VerlAgent(
                 model=model,
                 graph_partial=hydra.utils.instantiate(self.graph_partial, _partial_=True),
+                max_iterations=self.max_iterations,
+            )
+
+        if self.agent_type == EnvSetupAgentType.try_again or self.agent_type == EnvSetupAgentType.try_again.value:
+            return TryAgainAgent(
+                model=model,
+                toolkit=toolkit,
                 max_iterations=self.max_iterations,
             )
 
