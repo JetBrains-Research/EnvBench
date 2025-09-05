@@ -60,8 +60,9 @@ def create_try_again_workflow(
         new_message.additional_kwargs["reward_score"] = reward_score
         feedback_messages = []
         if reward_score < reward_score_for_pass:
-            feedback_messages.append(HumanMessage(content=feedback_text))
+            feedback_messages.append(HumanMessage(content=f"{feedback_text}\nYou have {state['max_turns'] - state['turn'] - 1} attempts left."))
         return {"messages": [new_message] + feedback_messages,
+                "rewards": [reward_score],
                 "turn": state["turn"] + 1}
 
     # Create the graph
