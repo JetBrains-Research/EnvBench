@@ -9,7 +9,7 @@ inference:
     agent_type: try_again
     max_iterations: 2
     reward_score_for_pass: 1.0
-    static_feedback: "Try Again."
+    static_feedback: "Incorrect. Please think again."
   data_source:
     hf:
       hub_name: JetBrains-Research/envbench-zeroshot-rl

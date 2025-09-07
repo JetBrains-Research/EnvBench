@@ -53,6 +53,9 @@ class EnvSetupAgentConfig(BaseModel, extra=Extra.allow):
     """Defines language of the project to be set up."""
     max_script_generation_attempts: Optional[int] = None
     """For read-only agents, defines maximum allowed number of attempts to generate a script."""
+    static_feedback: Optional[str] = None
+    """For try-again agent, pass to make the graph insert static feedback in between turns.
+    (if None, feedback is taken from reward function)"""
 
     @validator("toolkit")
     def validate_toolkit(cls, toolkit: Union[str, EnvSetupToolkit]) -> EnvSetupToolkit:
@@ -160,6 +163,7 @@ class EnvSetupAgentConfig(BaseModel, extra=Extra.allow):
                 model=model,
                 toolkit=toolkit,
                 max_iterations=self.max_iterations,
+                static_feedback=self.static_feedback,
             )
 
         raise ValueError(
