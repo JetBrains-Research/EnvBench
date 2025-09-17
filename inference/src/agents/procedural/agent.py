@@ -12,7 +12,7 @@ from ...toolkits.base import BaseEnvSetupToolkit
 from ...utils import message_to_info
 from ..base import BaseEnvSetupAgent
 from .commands import JVM_CONTEXT_COMMANDS, PYTHON_CONTEXT_COMMANDS
-from .prompts import get_jvm_setup_prompt, get_python_setup_prompt
+from .prompts import get_jvm_setup_prompt, get_python_setup_prompt, get_repo2run_setup_prompt
 
 
 class EnvSetupProceduralState(TypedDict):
@@ -42,7 +42,7 @@ class EnvSetupProceduralAgent(
         model: BaseChatModel,
         toolkit: BaseEnvSetupToolkit,
         instruction_provider: EnvSetupInstructionProvider,
-        language: Literal["python", "jvm"],
+        language: Literal["python", "jvm", "repo2run"],
         max_iterations: Optional[int] = None,
     ):
         self.toolkit = toolkit
@@ -54,7 +54,7 @@ class EnvSetupProceduralAgent(
 
     async def collect_context(self, state: EnvSetupProceduralState) -> dict:
         """Node that collects context by running predefined commands."""
-        commands = PYTHON_CONTEXT_COMMANDS if self.language == "python" else JVM_CONTEXT_COMMANDS
+        commands = PYTHON_CONTEXT_COMMANDS if self.language in ["python", "repo2run"] else JVM_CONTEXT_COMMANDS
 
         results = []
         for cmd in commands:
@@ -68,7 +68,7 @@ class EnvSetupProceduralAgent(
 
     async def generate_script(self, state: EnvSetupProceduralState) -> dict:
         """Node that generates the script using the LLM."""
-        prompt_func = get_python_setup_prompt if self.language == "python" else get_jvm_setup_prompt
+        prompt_func = get_python_setup_prompt if self.language == "python" else get_jvm_setup_prompt if self.language == "jvm" else get_repo2run_setup_prompt
         prompt = prompt_func(state)
         print(prompt)
         response = await self.model.ainvoke(prompt)

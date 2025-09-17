@@ -27,6 +27,7 @@ class ModelConfig(InstantiatableConfig[BaseChatModel], extra=Extra.allow): ...
 class EnvSetupAgentType(Enum):
     python = "python"
     jvm = "jvm"
+    procedural_repo2run = "procedural-repo2run"
     procedural_python = "procedural-python"
     procedural_jvm = "procedural-jvm"
     installamatic = "installamatic"
@@ -90,6 +91,19 @@ class EnvSetupAgentConfig(BaseModel, extra=Extra.allow):
             return InstallamaticAgent(
                 toolkit=toolkit, model=model, max_iterations=self.max_iterations, language=self.language
             )
+
+        if (
+            self.agent_type == EnvSetupAgentType.procedural_repo2run
+            or self.agent_type == EnvSetupAgentType.procedural_repo2run.value
+        ):
+            return EnvSetupProceduralAgent(
+                toolkit=toolkit,
+                model=model,
+                instruction_provider=instruction_provider,
+                max_iterations=self.max_iterations,
+                language="repo2run",
+            )
+
 
         if (
             self.agent_type == EnvSetupAgentType.procedural_python

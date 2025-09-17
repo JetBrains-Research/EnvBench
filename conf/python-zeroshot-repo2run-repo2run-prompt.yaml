@@ -1,0 +1,9 @@
+defaults:
+  - python-bash
+  - benchmark/repo2run
+
+tag: repo2run/python-zeroshot-repo2run-prompt
+
+inference:
+  agent:
+    agent_type: procedural-repo2run
