@@ -1,10 +1,16 @@
 # 🌱⚙️ EnvBench
-> *A benchmark for automated development environment setup*
+
+![jetbrains research badge](https://img.shields.io/badge/research-1?label=JetBrains&color=%236b57ff)
+[![arxiv badge](https://img.shields.io/badge/2503.14443-1?style=flat&logo=arXiv&label=arXiv&color=%23B31B1B)](https://arxiv.org/abs/2503.14443)
+
+
+> *A benchmark for automated development environment setup* 
 
 <div align="center">
   <img src=".github/overview.png" alt="Environment Setup Pipeline Overview" width="800"/>
   <p><em>Overview of the EnvBench pipeline</em></p>
 </div>
+
 
 ## 🔥 What's This?
 
